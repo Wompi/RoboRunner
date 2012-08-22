@@ -11,11 +11,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -481,8 +483,9 @@ public class RoboRunner {
 
     boolean showConfidence = (getMinBattles(errorMap) >= 2);
     int confidenceIterations =
-        (finalScore ? Math.min(20000, 10000000 / scoreSummary.numBattles)
-                    : Math.min(1000, 100000 / scoreSummary.numBattles));
+    		// TODO: wompi - just a quickfix to prevent the exception if numbattles = 0, the source should be fixed
+        (finalScore ? Math.min(20000, 10000000 / Math.max(1,scoreSummary.numBattles))
+                    : Math.min(1000, 100000 / Math.max(1,scoreSummary.numBattles)));
     double confidence = 0;
     if (challenge.hasGroups()) {
       double sumGroups = 0;
@@ -660,15 +663,23 @@ public class RoboRunner {
 
   private void printMeleeScores(BattleScore lastScore, BattleScore avgScore,
       String challenger, ScoringStyle scoringStyle) {
-    for (String enemy : lastScore.getBots()) {
+    
+	  int len = 0;
+	  List<String> bots = lastScore.getBots();
+	  
+
+	  for (String enemy : bots) {
+	      if (!enemy.equals(challenger)) {
+	    	  len = Math.max(len, enemy.length());
+	      }
+	  }
+	  
+	  for (String enemy : bots) {
       if (!enemy.equals(challenger)) {
         // TODO: show raw score fields too
-        System.out.println("    vs " + enemy + ": "
-            + round(scoringStyle.getScore(
-                lastScore.getRelativeScore(challenger, enemy)), 2)
-            + ", avg: "
-            + round(scoringStyle.getScore(
-                avgScore.getRelativeScore(challenger, enemy)), 2));
+        System.out.format("\tvs %"+len+"s: %5.2f, avg %5.2f\n",enemy,
+        		scoringStyle.getScore(lastScore.getRelativeScore(challenger, enemy)),
+        		scoringStyle.getScore(avgScore.getRelativeScore(challenger, enemy)));
       }
     }
   }
