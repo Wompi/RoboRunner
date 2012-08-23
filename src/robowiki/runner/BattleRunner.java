@@ -119,6 +119,14 @@ public class BattleRunner {
     for (String scoreString : botScores) {
       String[] scoreFields = scoreString.split(BattleProcess.SCORE_DELIMITER);
       String botName = scoreFields[0];
+      
+//      if (botName.contains("*"))
+//      {
+//    	  botName = botName.substring(0, botName.indexOf("*"));
+//      }
+//      System.out.format("Result: botName = %s orig=%s\n", botName,scoreFields[0]);
+
+      
       int score = Integer.parseInt(scoreFields[1]);
       int firsts = Integer.parseInt(scoreFields[2]);
       int survivalScore = Integer.parseInt(scoreFields[3]);

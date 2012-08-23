@@ -256,8 +256,15 @@ public class RoboRunner {
     System.out.println();
     System.out.print("Copying missing bots...");
     int jarsCopied = 0;
-    List<BotList> allBots =
-        Lists.newArrayList(new BotList(_config.challengerBot));
+    
+    List<BotList> allBots = Lists.newArrayList();
+//    if (!_config.challengerBot.contains("*"))
+//    {
+    	allBots.add(new BotList(_config.challengerBot));
+//    }
+//    else System.out.format("Develop Version of %s detected.\n", _config.challengerBot);
+    	
+    
     allBots.addAll(_config.challenge.allReferenceBots);
     for (BotList botList : allBots) {
       for (String bot : botList.getBotNames()) {
