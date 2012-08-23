@@ -11,11 +11,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-<<<<<<< HEAD
+
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
-=======
 import java.util.Iterator;
->>>>>>> refs/heads/master
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +23,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 
+import javax.activation.DataHandler;
 import javax.xml.stream.XMLStreamException;
 
 import robowiki.runner.BattleRunner.BattleResultHandler;
@@ -674,25 +675,17 @@ public class RoboRunner {
 
   private void printMeleeScores(BattleScore lastScore, BattleScore avgScore,
       String challenger, ScoringStyle scoringStyle) {
-<<<<<<< HEAD
     
-	  int len = 0;
-	  List<String> bots = lastScore.getBots();
-	  
-
-	  for (String enemy : bots) {
-	      if (!enemy.equals(challenger)) {
-	    	  len = Math.max(len, enemy.length());
-	      }
-	  }
-	  
-	  for (String enemy : bots) {
-      if (!enemy.equals(challenger)) {
-        // TODO: show raw score fields too
-        System.out.format("\tvs %"+len+"s: %5.2f, avg %5.2f\n",enemy,
-        		scoringStyle.getScore(lastScore.getRelativeScore(challenger, enemy)),
-        		scoringStyle.getScore(avgScore.getRelativeScore(challenger, enemy)));
-=======
+//	  int len = 0;
+//	  List<String> bots = lastScore.getBots();
+//	  
+//
+//	  for (String enemy : bots) {
+//	      if (!enemy.equals(challenger)) {
+//	    	  len = Math.max(len, enemy.length());
+//	      }
+//	  }
+//	  
     RobotScore challengerScore = lastScore.getRobotScore(challenger);
     RobotScore avgChallengerScore = avgScore.getRobotScore(challenger);
 
@@ -713,18 +706,36 @@ public class RoboRunner {
         }
       }
     }
+    
+    int len = 0;
+    
+    class DataHelper implements Comparable<DataHelper>
+    {
+    	String name;
+    	double relScore;
+    	double avgScore;
+		
+    	@Override
+		public int compareTo(DataHelper o)
+		{
+			return (int) (this.avgScore - o.avgScore);
+		}
+    }
+    List<DataHelper> results = new ArrayList<DataHelper>();
+    
     for (RobotScore robotScore : lastScore.getRobotScores()) {
-      if (robotScore != challengerScore) {
-        RobotScore relativeScore = challengerScore.getScoreRelativeTo(
-            robotScore, lastScore.getNumRounds());
-        RobotScore avgRelativeScore = avgChallengerScore.getScoreRelativeTo(
-            avgScoreMap.get(robotScore), avgScore.getNumRounds());
-        System.out.println("    vs " + robotScore.botName + ": "
-            + round(scoringStyle.getScore(relativeScore), 2)
-            + ", avg: "
-            + round(scoringStyle.getScore(avgRelativeScore), 2));
->>>>>>> refs/heads/master
-      }
+        if (robotScore != challengerScore) {
+        	DataHelper data = new DataHelper();
+        	data.name = robotScore.botName;
+        	data.relScore = scoringStyle.getScore(challengerScore.getScoreRelativeTo(robotScore, lastScore.getNumRounds()));
+        	data.avgScore = scoringStyle.getScore(avgChallengerScore.getScoreRelativeTo(avgScoreMap.get(robotScore), avgScore.getNumRounds()));
+        	len = Math.max(len, robotScore.botName.length());
+        	results.add(data);
+        }    	
+    }
+    Collections.sort(results);
+    for (DataHelper data : results) {
+       System.out.format("\tvs %"+len+"s: %5.2f, avg %5.2f\n",data.name,data.relScore,data.avgScore);
     }
   }
 
