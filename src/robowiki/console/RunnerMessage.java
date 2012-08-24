@@ -15,7 +15,6 @@ public class RunnerMessage implements Comparable<RunnerMessage>
 	@Override
 	public int compareTo(RunnerMessage o)
 	{
-		// TODO Auto-generated method stub
 		return myPriority - o.myPriority;
 	}
 

@@ -50,7 +50,6 @@ public class QueueWorker implements Runnable
 					setup.myResult = "5";
 					myHandler.sendMessage(setup, newEvent.getDestination());
 				}
-
 			}
 			catch (InterruptedException e)
 			{}

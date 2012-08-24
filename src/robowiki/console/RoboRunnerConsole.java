@@ -8,16 +8,17 @@ import java.util.Map;
 
 public class RoboRunnerConsole implements IMessageHandler
 {
-	private QueueWorker								myQueue;
-	private final HashMap<String, SendWorker>		mySendConnections;
-	private final HashMap<String, ReceiveWorker>	myReceiveConnections;
+	private QueueWorker							myQueue;
+	private final HashMap<String, SendWorker>	mySendConnections;
 
 	public static void main(String[] args)
 	{
 		try
 		{
-			System.out.format("Start ...\n");
+			String version = "1.3.0";
 			System.setProperty(RoboRunnerDefines.PROCESS_NAME_KEY, "MAIN");
+			System.setProperty(RoboRunnerDefines.VERSION_KEY, version);
+			System.out.format("Welcome to RoboRunner %s. Type HELP if unsure.\n", version);
 			new RoboRunnerConsole();
 
 		}
@@ -30,12 +31,18 @@ public class RoboRunnerConsole implements IMessageHandler
 	public RoboRunnerConsole() throws IOException, InterruptedException
 	{
 		mySendConnections = new HashMap<String, SendWorker>();
-		myReceiveConnections = new HashMap<String, ReceiveWorker>();
-		final Thread tConsole = new Thread(new ConsoleWorker(System.in, this, "CONSOLE"));
+		if (RoboRunnerConfig.getInstance().isFirstRun)
+		{
+			System.out.format("Looks like this is your first run - type CONFIG to setup the system.\n");
+		};
 		final Thread tQueue = new Thread(myQueue = new QueueWorker(this));
-		tConsole.start();
 		tQueue.start();
+		final Thread tConsole = new Thread(new ConsoleWorker(System.in, this, "CONSOLE"));
+		tConsole.start();
+	}
 
+	public void startProcesses() throws IOException
+	{
 		List<String> command = new ArrayList<String>();
 		command.add("java");
 		command.add("-cp");
@@ -56,12 +63,10 @@ public class RoboRunnerConsole implements IMessageHandler
 			final Process battleProcess = builder.start();
 
 			SendWorker sendWorker = new SendWorker(battleProcess.getOutputStream(), processName);
-			ReceiveWorker receiveWorker = new ReceiveWorker(battleProcess.getInputStream(), this, processName);
 			mySendConnections.put(processName, sendWorker);
-			myReceiveConnections.put(processName, receiveWorker);
 
 			final Thread tSend = new Thread(sendWorker);
-			final Thread tReceive = new Thread(receiveWorker);
+			final Thread tReceive = new Thread(new ReceiveWorker(battleProcess.getInputStream(), this, processName));
 			tSend.start();
 			tReceive.start();
 			System.out.format("Process [%s] started ..\n", processName);
@@ -79,13 +84,6 @@ public class RoboRunnerConsole implements IMessageHandler
 				}
 			}
 		}));
-
-		//		RunnerMessage init = new RunnerMessage("MAIN");
-		//		init.myCommand = RoboRunnerDefines.INIT_SIGNAL;
-		//		init.myResult = "you can now init";
-		//		init.myPriority = 1;
-		//
-		//		sendMessage(init);
 
 	}
 
