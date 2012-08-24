@@ -4,3 +4,5 @@
 .settings/org.eclipse.jdt.ui.prefs
 robocodes/*
 roborunner.properties
+challenges/*
+libs/*
