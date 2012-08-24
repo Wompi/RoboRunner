@@ -10,10 +10,10 @@ import java.io.InputStreamReader;
 public class ConsoleWorker implements Runnable
 {
 	private final InputStreamReader	myInput;
-	private final IMessageHandler	myHandler;
+	private final RoboRunnerConsole	myHandler;
 	private final String			myName;
 
-	public ConsoleWorker(InputStream in, IMessageHandler handler, String name) throws IOException
+	public ConsoleWorker(InputStream in, RoboRunnerConsole handler, String name) throws IOException
 	{
 		myInput = new InputStreamReader(in);
 		myHandler = handler;
@@ -33,13 +33,12 @@ public class ConsoleWorker implements Runnable
 				String command = br.readLine();
 
 				if (command.equals(""))
-				{
-					// do nothing on emty input
-				}
+				{} // do nothing on empty input
+				else if (command.equalsIgnoreCase(RoboRunnerDefines.START)) processStart();
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.INIT_REQUEST))
 				{
 					RunnerMessage msg = new RunnerMessage();
-					msg.myCommand = RoboRunnerDefines.INIT_REQUEST; // check if it is a command anyway .. normal output should be handled as info
+					msg.myCommand = RoboRunnerDefines.INIT_REQUEST;
 					msg.myPriority = 1;
 					msg.myResult = "you can now init";
 					myHandler.sendMessage(msg, RoboRunnerDefines.ALL_PROCESSES);
@@ -58,10 +57,8 @@ public class ConsoleWorker implements Runnable
 					Runtime.getRuntime().exit(0);
 				}
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.CONFIG)) processConfig(br);
-				else
-				{
-					System.out.format("Sorry dude i don't know what you talking about..\n");
-				}
+				else if (command.equalsIgnoreCase(RoboRunnerDefines.CHALLENGE)) processChallenge(br);
+				else System.out.format("Sorry dude i don't know what you'r talking about. Was it cheese?\n");
 
 			}
 			catch (IOException e)
@@ -69,6 +66,29 @@ public class ConsoleWorker implements Runnable
 				e.printStackTrace();
 			}
 		}
+	}
+
+	private void processStart()
+	{
+		try
+		{
+			myHandler.startProcesses();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	private void processChallenge(BufferedReader br)
+	{
+		// TODO Auto-generated method stub
+		// TODO: read all challenge files
+		// build up a challenge manger
+		// show all available challenges an make it number input driven like 1: melee_bla 2: single_bla ...
+		// configure challenge for PROCESS (ALL,1,2,....) 
+		// 
+
 	}
 
 	private void processConfig(BufferedReader br) throws IOException
@@ -80,7 +100,7 @@ public class ConsoleWorker implements Runnable
 			command = br.readLine();
 			if (!command.equals(""))
 			{
-				if (RunnerFunctions.checkPath(command, false, true))
+				if (maintainRobocode(command))
 				{
 					RoboRunnerConfig.getInstance().setSourceRobocodePath(command);
 					break;
@@ -91,7 +111,7 @@ public class ConsoleWorker implements Runnable
 		}
 
 		String lastCount = RoboRunnerConfig.getInstance().getInstallCount();
-		System.out.format("Who many installations (1-20) [%s]: ", lastCount);
+		System.out.format("How many installations (1-20) [%s]: ", lastCount);
 		while (true)
 		{
 			try
@@ -139,6 +159,35 @@ public class ConsoleWorker implements Runnable
 		}
 	}
 
+	private boolean maintainRobocode(String sourceDir)
+	{
+		if (!RunnerFunctions.checkPath(sourceDir, false, true)) { return false; }
+
+		File robocodeSrc = new File(sourceDir);
+
+		FilenameFilter directoryFilter = new FilenameFilter()
+		{
+			@Override
+			public boolean accept(File dir, String name)
+			{
+				if (name.equalsIgnoreCase(RoboRunnerDefines.JAR_DIR_NAME)) return true;
+				if (dir.getName().equalsIgnoreCase(RoboRunnerDefines.JAR_DIR_NAME)) return true;
+				return false;
+			}
+		};
+
+		String destDir = System.getProperty("user.dir");
+		try
+		{
+			RunnerFunctions.copyFolder(robocodeSrc, new File(destDir), directoryFilter);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		return true;
+	}
+
 	private boolean maintainCopys(int copys)
 	{
 		String sourceDir = RoboRunnerConfig.getInstance().getSourceRobocodePath();
@@ -148,10 +197,10 @@ public class ConsoleWorker implements Runnable
 			return false;
 		}
 
-		File root = new File("robocodes");
+		File root = new File(RoboRunnerDefines.ROBOCODE_DIR_NAME);
 		if (!root.exists())
 		{
-			System.out.format("installation ./robocodes don't exist - i will make one\n");
+			System.out.format("Directory %s don't exist - i will make one.\n", RoboRunnerDefines.ROBOCODE_DIR_NAME);
 			root.mkdir();
 		}
 		else
@@ -183,7 +232,7 @@ public class ConsoleWorker implements Runnable
 				if (name.equalsIgnoreCase("robots")) return true;
 				if (name.equalsIgnoreCase("config")) return true;
 
-				if (dir.getName().equalsIgnoreCase("libs")) return true;
+				//if (dir.getName().equalsIgnoreCase("libs")) return true;
 				if (dir.getName().equalsIgnoreCase("config")) return true;
 				return false;
 			}
@@ -191,7 +240,7 @@ public class ConsoleWorker implements Runnable
 
 		for (int i = 0; i < copys; i++)
 		{
-			destDir = String.format("robocodes%src%d", System.getProperty("file.separator"), i + 1);
+			destDir = String.format("%s%src%d", RoboRunnerDefines.ROBOCODE_DIR_NAME, System.getProperty("file.separator"), i);
 			try
 			{
 				RunnerFunctions.copyFolder(robocodeSrc, new File(destDir), directoryFilter);

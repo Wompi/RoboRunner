@@ -52,9 +52,9 @@ public class BattleProcessConsole implements IMessageHandler
 			{
 				// one enhancement would be to made this in a thread then the messages can still be processed like setups or something else
 				// this leads to message blocking 
-				File path = new File("/Volumes/Data/roborunner-1.2.1/robocodes/r1");
+				File path = new File(System.getenv(RoboRunnerDefines.PROCESS_PATH_KEY));
 				myEngine = new RobocodeEngine(path);
-				result = "i'm now fully initialized - send me some setup";
+				result = "i'm now fully initialized - send me some setup: " + System.getenv(RoboRunnerDefines.PROCESS_PATH_KEY);
 			}
 
 			RunnerMessage setup = new RunnerMessage();

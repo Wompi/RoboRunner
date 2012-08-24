@@ -13,7 +13,8 @@ public class RoboRunnerConfig
 	private static RoboRunnerConfig	instance;
 
 	private static Properties		myProperties;
-	public static boolean			isFirstRun;
+	private boolean					isFirstRun;
+	private boolean					hasChanged;
 
 	private RoboRunnerConfig()
 	{
@@ -38,12 +39,21 @@ public class RoboRunnerConfig
 				@Override
 				public void run()
 				{
-					System.out.format("Shutdown: store settings...\n");
-					instance.store();
+					// because this is a shutdown hook the file should not be written if the configuration is not changed
+					if (RoboRunnerConfig.getInstance().hasChanged)
+					{
+						System.out.format("Shutdown: store settings...\n");
+						instance.store();
+					}
 				}
 			}));
 		}
 		return instance;
+	}
+
+	public boolean isFirstRun()
+	{
+		return isFirstRun;
 	}
 
 	public String getSourceRobocodePath()
@@ -54,11 +64,20 @@ public class RoboRunnerConfig
 	public void setSourceRobocodePath(String path)
 	{
 		myProperties.setProperty(RoboRunnerDefines.ROBOCODE_SOURCE_PATH_KEY, path);
+		hasChanged = true;
 	}
 
 	public String getInstallCount()
 	{
 		return myProperties.getProperty(RoboRunnerDefines.INSTALL_COUNT_KEY);
+	}
+
+	public void setInstallCount(String count) throws NumberFormatException
+	{
+		Integer check = Integer.parseInt(count);
+		check = Math.max(1, Math.min(20, check));
+		myProperties.setProperty(RoboRunnerDefines.INSTALL_COUNT_KEY, check.toString());
+		hasChanged = true;
 	}
 
 	public String getSourceBotPath()
@@ -69,13 +88,7 @@ public class RoboRunnerConfig
 	public void setSourceBotPath(String path)
 	{
 		myProperties.setProperty(RoboRunnerDefines.BOT_SOURCE_KEY, path);
-	}
-
-	public void setInstallCount(String count) throws NumberFormatException
-	{
-		Integer check = Integer.parseInt(count);
-		check = Math.max(1, Math.min(20, check));
-		myProperties.setProperty(RoboRunnerDefines.INSTALL_COUNT_KEY, check.toString());
+		hasChanged = true;
 	}
 
 	private static void load(String fileName) throws IOException
@@ -95,9 +108,6 @@ public class RoboRunnerConfig
 
 	private void store()
 	{
-		// because this is a shutdown hook the file should not be written if the configuration is empty
-		if (myProperties.size() == 0) return;
-
 		FileOutputStream fos = null;
 
 		try

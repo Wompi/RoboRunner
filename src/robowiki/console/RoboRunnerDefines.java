@@ -19,6 +19,8 @@ public class RoboRunnerDefines
 	public static final String	CONFIG						= "CONFIG";
 	public static final String	QUIT						= "QUIT";
 	public static final String	EXIT						= "EXIT";
+	public static final String	START						= "START";
+	public static final String	CHALLENGE					= "CHAL";
 
 	public static final String	MSG_DELIMITER				= "|";
 	public static final String	MSG_SPLITER					= "\\|";								// beware of the RegExp meaning
@@ -29,10 +31,14 @@ public class RoboRunnerDefines
 	// general related
 	public static final String	MAIN_PROPERTIES_NAME		= "roborunner.properties";
 	public static final String	PROCESS_NAME_KEY			= "roborunner.processname";
+	public static final String	PROCESS_PATH_KEY			= "roborunner.processpath";
+
 	public static final String	VERSION_KEY					= "roborunner.version";
 	public static final String	ROBOCODE_SOURCE_PATH_KEY	= "roborunner.robocode.source";
 
 	public static final String	ALL_PROCESSES				= "ALL_PROCESSES";
+	public static final String	ROBOCODE_DIR_NAME			= "robocodes";
+	public static final String	JAR_DIR_NAME				= "libs";
 	public static final String	INSTALL_COUNT_KEY			= "roborannuer.robocode.installations";
 	public static final String	BOT_SOURCE_KEY				= "roborunner.botsource";
 }

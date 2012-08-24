@@ -31,7 +31,7 @@ public class RoboRunnerConsole implements IMessageHandler
 	public RoboRunnerConsole() throws IOException, InterruptedException
 	{
 		mySendConnections = new HashMap<String, SendWorker>();
-		if (RoboRunnerConfig.getInstance().isFirstRun)
+		if (RoboRunnerConfig.getInstance().isFirstRun())
 		{
 			System.out.format("Looks like this is your first run - type CONFIG to setup the system.\n");
 		};
@@ -43,6 +43,21 @@ public class RoboRunnerConsole implements IMessageHandler
 
 	public void startProcesses() throws IOException
 	{
+		int processCount;
+		try
+		{
+			processCount = Integer.parseInt(RoboRunnerConfig.getInstance().getInstallCount());
+		}
+		catch (Exception e)
+		{
+			System.out.format("Sorry, the configuration is not valid. Type CONFIG to setup the values.\n");
+			return;
+		}
+
+		String workDir = System.getProperty("user.dir");
+		String sep = System.getProperty("file.separator");
+		if (!workDir.endsWith(sep)) workDir += sep;
+
 		List<String> command = new ArrayList<String>();
 		command.add("java");
 		command.add("-cp");
@@ -53,13 +68,20 @@ public class RoboRunnerConsole implements IMessageHandler
 		builder.redirectErrorStream(true);
 		Map<String, String> env = builder.environment();
 
-		// TODO: put the RoboCode installations in the configuration class
-
 		final List<Process> myProcesses = new ArrayList<Process>();
-		for (int i = 0; i < 2; i++)
+		for (int i = 0; i < processCount; i++)
 		{
 			String processName = String.format("PRO_%d", i);
+			String processPath = String.format("%s%s%src%d", workDir, RoboRunnerDefines.ROBOCODE_DIR_NAME, sep, i);
+			if (!RunnerFunctions.checkPath(processPath, false, true))
+			{
+				// this should not be happen - only if the user deletes the installation directories manually
+				System.out.format("Sorry, your installations are not valid. Type CONFIG to setup the values.\n");
+				return;
+			}
+
 			env.put(RoboRunnerDefines.PROCESS_NAME_KEY, processName);
+			env.put(RoboRunnerDefines.PROCESS_PATH_KEY, processPath);
 			final Process battleProcess = builder.start();
 
 			SendWorker sendWorker = new SendWorker(battleProcess.getOutputStream(), processName);
