@@ -10,11 +10,13 @@ public class SendWorker implements Runnable
 {
 	private final OutputStreamWriter					myOutPut;
 	private final PriorityBlockingQueue<RunnerMessage>	mySendQueue;
+	private final String								myProcessName;
 
-	public SendWorker(OutputStream out) throws IOException
+	public SendWorker(OutputStream out, String name) throws IOException
 	{
 		myOutPut = new OutputStreamWriter(out);
 		mySendQueue = new PriorityBlockingQueue<RunnerMessage>();
+		myProcessName = name;
 	}
 
 	@Override

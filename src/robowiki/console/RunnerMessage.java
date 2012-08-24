@@ -7,9 +7,9 @@ public class RunnerMessage implements Comparable<RunnerMessage>
 	String					myResult;
 	int						myPriority;
 
-	public RunnerMessage(String source)
+	public RunnerMessage()
 	{
-		mySource = source;
+		mySource = RunnerFunctions.getProcessName();
 	}
 
 	@Override

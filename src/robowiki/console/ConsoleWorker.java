@@ -32,19 +32,20 @@ public class ConsoleWorker implements Runnable
 				// parse console input
 				if (newMsg.equals(RoboRunnerDefines.INIT_REQUEST))
 				{
-					RunnerMessage msg = new RunnerMessage("CONSOLE");
+					RunnerMessage msg = new RunnerMessage();
 					msg.myCommand = RoboRunnerDefines.INIT_REQUEST; // check if it is a command anyway .. normal output should be handled as info
 					msg.myPriority = 1;
 					msg.myResult = "you can now init";
-					myHandler.sendMessage(msg);
+					myHandler.sendMessage(msg, RoboRunnerDefines.ALL_PROCESSES);
 				}
 				else if (newMsg.equals(RoboRunnerDefines.RUN))
 				{
-					RunnerMessage setup = new RunnerMessage("CONSOLE");
+					// TODO: parse the input to the current process and not to all
+					RunnerMessage setup = new RunnerMessage();
 					setup.myCommand = RoboRunnerDefines.RUN;
 					setup.myPriority = 1;
 					setup.myResult = "5";
-					myHandler.sendMessage(setup);
+					myHandler.sendMessage(setup, RoboRunnerDefines.ALL_PROCESSES);
 				}
 				else
 				{

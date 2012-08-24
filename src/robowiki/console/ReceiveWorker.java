@@ -9,13 +9,13 @@ public class ReceiveWorker implements Runnable
 {
 	private final InputStreamReader	myInput;
 	private final IMessageHandler	myHandler;
-	private final String			myName;
+	private final String			myProcessName;
 
 	public ReceiveWorker(InputStream in, IMessageHandler handler, String name) throws IOException
 	{
 		myInput = new InputStreamReader(in);
 		myHandler = handler;
-		myName = name;
+		myProcessName = name;
 	}
 
 	@Override
@@ -33,7 +33,7 @@ public class ReceiveWorker implements Runnable
 
 				if (parse.length == 4)
 				{
-					RunnerMessage msg = new RunnerMessage(parse[0]);
+					ProcessMessage msg = new ProcessMessage(parse[0]);
 					msg.myCommand = parse[1]; // check if it is a command anyway .. normal output should be handled as info
 					msg.myPriority = Integer.parseInt(parse[2]);
 					msg.myResult = parse[3];
@@ -42,7 +42,7 @@ public class ReceiveWorker implements Runnable
 				else
 				{
 					// looks like we got some console printouts from the process, and we make it an info
-					RunnerMessage msg = new RunnerMessage("???");
+					ProcessMessage msg = new ProcessMessage(myProcessName);
 					msg.myCommand = RoboRunnerDefines.INFO; // check if it is a command anyway .. normal output should be handled as info
 					msg.myPriority = 1;
 					msg.myResult = newMsg;

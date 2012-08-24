@@ -4,12 +4,12 @@ import java.util.concurrent.PriorityBlockingQueue;
 
 public class QueueWorker implements Runnable
 {
-	private final PriorityBlockingQueue<RunnerMessage>	myInputQueue;
+	private final PriorityBlockingQueue<ProcessMessage>	myInputQueue;
 	private final IMessageHandler						myHandler;
 
 	public QueueWorker(IMessageHandler handler)
 	{
-		myInputQueue = new PriorityBlockingQueue<RunnerMessage>();
+		myInputQueue = new PriorityBlockingQueue<ProcessMessage>();
 		myHandler = handler;
 	}
 
@@ -20,26 +20,35 @@ public class QueueWorker implements Runnable
 		{
 			try
 			{
-				RunnerMessage newEvent = myInputQueue.take();
+				ProcessMessage newEvent = myInputQueue.take();
 				// make something with the event - some sort of event processor
 				System.out.format("processed:  %s", newEvent.toString());
-				if (newEvent.myCommand.equals(RoboRunnerDefines.SETUP_REQUEST))
+
+				if (newEvent.myCommand.equals(RoboRunnerDefines.STARTED))
+				{
+					RunnerMessage msg = new RunnerMessage();
+					msg.myCommand = RoboRunnerDefines.INIT_REQUEST; // check if it is a command anyway .. normal output should be handled as info
+					msg.myPriority = 1;
+					msg.myResult = "you can now init";
+					myHandler.sendMessage(msg, newEvent.getDestination());
+				}
+				else if (newEvent.myCommand.equals(RoboRunnerDefines.SETUP_REQUEST))
 				{
 					// TODO: build a configuration object where the necessary informations come from
 					//MAIN|SETUP|1|35:1000:1000:botName1,botName2,....
-					RunnerMessage setup = new RunnerMessage("MAIN");
+					RunnerMessage setup = new RunnerMessage();
 					setup.myCommand = RoboRunnerDefines.SETUP;
 					setup.myPriority = 1;
-					setup.myResult = "35:1000:1000:mld.DustBunny 3.8,wompi.Wallaby*";
-					myHandler.sendMessage(setup);
+					setup.myResult = "35:1000:1000:sample.SittingDuck 1.0,wompi.Wallaby*";
+					myHandler.sendMessage(setup, newEvent.getDestination());
 				}
 				else if (newEvent.myCommand.equals(RoboRunnerDefines.READY))
 				{
-					RunnerMessage setup = new RunnerMessage("MAIN");
+					RunnerMessage setup = new RunnerMessage();
 					setup.myCommand = RoboRunnerDefines.RUN;
 					setup.myPriority = 1;
 					setup.myResult = "5";
-					myHandler.sendMessage(setup);
+					myHandler.sendMessage(setup, newEvent.getDestination());
 				}
 
 			}
@@ -48,7 +57,7 @@ public class QueueWorker implements Runnable
 		}
 	}
 
-	public void addMessage(RunnerMessage msg)
+	public void addMessage(ProcessMessage msg)
 	{
 		myInputQueue.add(msg);
 	}

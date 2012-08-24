@@ -7,13 +7,14 @@ import robocode.control.BattleSpecification;
 import robocode.control.BattlefieldSpecification;
 import robocode.control.RobocodeEngine;
 import robocode.control.RobotSpecification;
-import robocode.control.events.BattleAdaptor;
+import robocode.control.events.IBattleListener;
 import robowiki.console.process.ProcessConfiguration;
 
 public class BattleProcessConsole implements IMessageHandler
 {
 	private RobocodeEngine			myEngine;
 	private ProcessConfiguration	myConfig;
+	private IBattleListener			myBattleListener;
 
 	public static void main(String[] args)
 	{
@@ -32,16 +33,16 @@ public class BattleProcessConsole implements IMessageHandler
 		Thread streamWatcher = new Thread(new ReceiveWorker(System.in, this, "PROCESS"));
 		streamWatcher.start();
 
-		RunnerMessage start = new RunnerMessage("PROCESS");
+		RunnerMessage start = new RunnerMessage();
 		start.myCommand = RoboRunnerDefines.STARTED;
 		start.myResult = "ok i'm ready to go";
 		start.myPriority = 1;
-		sendMessage(start);
+		sendMessage(start, null);
 
 	}
 
 	@Override
-	public void receiveMessage(RunnerMessage msg)
+	public void receiveMessage(ProcessMessage msg)
 	{
 		if (msg.myCommand.equals(RoboRunnerDefines.INIT_REQUEST))
 		{
@@ -56,11 +57,11 @@ public class BattleProcessConsole implements IMessageHandler
 				result = "i'm now fully initialized - send me some setup";
 			}
 
-			RunnerMessage setup = new RunnerMessage("PROCESS");
+			RunnerMessage setup = new RunnerMessage();
 			setup.myCommand = RoboRunnerDefines.SETUP_REQUEST;
 			setup.myResult = result;
 			setup.myPriority = 1;
-			sendMessage(setup);
+			sendMessage(setup, null);
 		}
 		else if (msg.myCommand.equals(RoboRunnerDefines.SETUP))
 		{
@@ -82,11 +83,11 @@ public class BattleProcessConsole implements IMessageHandler
 				catch (NumberFormatException e0)
 				{
 					e0.printStackTrace(); // can be deleted
-					RunnerMessage info = new RunnerMessage("PROCESS");
+					RunnerMessage info = new RunnerMessage();
 					info.myCommand = RoboRunnerDefines.INFO;
 					info.myPriority = 1;
 					info.myResult = "The setup you have send me is bogus!";
-					sendMessage(info);
+					sendMessage(info, null);
 					return;
 				}
 				catch (Exception e1)
@@ -94,12 +95,11 @@ public class BattleProcessConsole implements IMessageHandler
 					e1.printStackTrace();
 				}
 
-				RunnerMessage setup = new RunnerMessage("PROCESS");
+				RunnerMessage setup = new RunnerMessage();
 				setup.myCommand = RoboRunnerDefines.READY;
-				setup.myResult = String.format("i'm ready - my setup is: rounds=%d w=%d h=%d bots=(%s)", myConfig.getRounds(), myConfig.getW(),
-						myConfig.getH(), myConfig.getBots());
+				setup.myResult = String.format("i'm ready for battles now");
 				setup.myPriority = 1;
-				sendMessage(setup);
+				sendMessage(setup, null);
 			}
 		}
 		else if (msg.myCommand.equals(RoboRunnerDefines.RUN))
@@ -109,39 +109,50 @@ public class BattleProcessConsole implements IMessageHandler
 			// this should be made configurable to increase or decrease the cycles while running .. maybe because the challenge has a high standard error or something
 			if (checkEngineState() && checkSetupState())
 			{
+
+				RunnerMessage setup = new RunnerMessage();
+				setup.myCommand = RoboRunnerDefines.INFO;
+				setup.myResult = String.format("battle starts setup: rounds=%d w=%d h=%d bots=(%s)", myConfig.getRounds(), myConfig.getW(),
+						myConfig.getH(), myConfig.getBots());
+				setup.myPriority = 1;
+				sendMessage(setup, null);
+
 				myConfig.setSeasons(msg.myResult);
 
+				if (myBattleListener != null) myEngine.removeBattleListener(myBattleListener);
+				myEngine.addBattleListener(myBattleListener = new DefaultBattleAdaptor(this));
+				BattlefieldSpecification bField = new BattlefieldSpecification(myConfig.getW(), myConfig.getH());
+				RobotSpecification[] bots = myEngine.getLocalRepository(myConfig.getBots());
+				BattleSpecification spec = new BattleSpecification(myConfig.getRounds(), bField, bots);
+
+				// TODO: let this run in a thread to keep the communication open
 				for (int i = 0; i < myConfig.getSeasons(); i++)
 				{
-					myEngine.addBattleListener(new BattleAdaptor()
-					{}); // TODO: write a battleadaptor for the results
-					BattlefieldSpecification bField = new BattlefieldSpecification(myConfig.getW(), myConfig.getH());
-					RobotSpecification[] bots = myEngine.getLocalRepository(myConfig.getBots());
-					BattleSpecification spec = new BattleSpecification(myConfig.getRounds(), bField, bots);
 					myEngine.runBattle(spec, true);
 
-					RunnerMessage result = new RunnerMessage("PROCESS");
-					result.myCommand = RoboRunnerDefines.RESULT;
+					RunnerMessage result = new RunnerMessage();
+					result.myCommand = RoboRunnerDefines.INFO;
 					result.myPriority = 1;
-					result.myResult = String.format("Season [%d-%d] is over now. I'm to lazy to give you the results! Just guess who won.", i + 1,
-							myConfig.getSeasons());
-					sendMessage(result);
+					result.myResult = String.format("Season [%d-%d] is over now.", i + 1, myConfig.getSeasons());
+					sendMessage(result, null);
 				}
 			}
 		}
 		else
 		{
-			RunnerMessage unknown = new RunnerMessage("PROCESS");
+			RunnerMessage unknown = new RunnerMessage();
 			unknown.myCommand = RoboRunnerDefines.UNKNOWN;
 			unknown.myResult = "hey dude stop sending me " + msg.myCommand + " stuff. I have no clue about it!";
 			unknown.myPriority = 1;
-			sendMessage(unknown);
+			sendMessage(unknown, null);
 		}
 	}
 
 	@Override
-	public void sendMessage(RunnerMessage msg)
+	public void sendMessage(RunnerMessage msg, String processName)
 	{
+		// TODO: not sure if this should be processed with a queue, but i guess not
+		// the processName is not realy used for this IMessagehandler.. i let it in, maybe i change my mind about the design later 
 		System.out.format(msg.toString());
 	}
 
@@ -149,11 +160,11 @@ public class BattleProcessConsole implements IMessageHandler
 	{
 		if (myEngine == null)
 		{
-			RunnerMessage info = new RunnerMessage("PROCESS");
+			RunnerMessage info = new RunnerMessage();
 			info.myCommand = RoboRunnerDefines.INFO;
 			info.myPriority = 1;
 			info.myResult = "Dude what about initializtion?";
-			sendMessage(info);
+			sendMessage(info, null);
 			return false;
 		}
 		return true;
@@ -163,11 +174,11 @@ public class BattleProcessConsole implements IMessageHandler
 	{
 		if (myConfig == null)
 		{
-			RunnerMessage info = new RunnerMessage("PROCESS");
+			RunnerMessage info = new RunnerMessage();
 			info.myCommand = RoboRunnerDefines.INFO;
 			info.myPriority = 1;
 			info.myResult = "Dude what about setup?";
-			sendMessage(info);
+			sendMessage(info, null);
 			return false;
 		}
 		return true;
