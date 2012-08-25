@@ -10,7 +10,6 @@ import java.io.OutputStream;
 
 public class RunnerFunctions
 {
-
 	// This is a little awkward but for now it has to go
 	// The ProcessName can be set with the environment change to the ProcessBuilder but the main program can not
 	// so it uses the properties
@@ -110,6 +109,12 @@ public class RunnerFunctions
 	{
 		if (src.isDirectory())
 		{
+			if (directoryFilter == null)
+			{
+				System.out.format("ERROR: src i a directory and needs a filter to work\n");
+				return;
+			}
+
 			if (!dest.exists())
 			{
 				dest.mkdir();

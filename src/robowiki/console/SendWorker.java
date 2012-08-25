@@ -31,7 +31,7 @@ public class SendWorker implements Runnable
 				RunnerMessage sendMsg = mySendQueue.take();
 				bw.append(sendMsg.toString());
 				bw.flush();
-				System.out.format("send from: %s", sendMsg.toString());
+				if (RoboRunnerConfig.getInstance().isDebug()) System.out.format("send from: %s", sendMsg.toString());
 			}
 			catch (IOException e)
 			{

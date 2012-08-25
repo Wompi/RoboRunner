@@ -42,11 +42,14 @@ public class ReceiveWorker implements Runnable
 				else
 				{
 					// looks like we got some console printouts from the process, and we make it an info
-					ProcessMessage msg = new ProcessMessage(myProcessName);
-					msg.myCommand = RoboRunnerDefines.INFO; // check if it is a command anyway .. normal output should be handled as info
-					msg.myPriority = 1;
-					msg.myResult = newMsg;
-					myHandler.receiveMessage(msg);
+					if (RoboRunnerConfig.getInstance().isDebug())
+					{
+						ProcessMessage msg = new ProcessMessage(myProcessName);
+						msg.myCommand = RoboRunnerDefines.INFO; // check if it is a command anyway .. normal output should be handled as info
+						msg.myPriority = 1;
+						msg.myResult = newMsg;
+						myHandler.receiveMessage(msg);
+					}
 				}
 			}
 			catch (IOException e)

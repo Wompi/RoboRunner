@@ -8,8 +8,9 @@ import java.util.Map;
 
 public class RoboRunnerConsole implements IMessageHandler
 {
-	private QueueWorker							myQueue;
-	private final HashMap<String, SendWorker>	mySendConnections;
+	private QueueWorker								myQueue;
+	private final HashMap<String, SendWorker>		mySendConnections;
+	private final HashMap<String, RunnerChallenge>	myChallMap;
 
 	public static void main(String[] args)
 	{
@@ -18,7 +19,7 @@ public class RoboRunnerConsole implements IMessageHandler
 			String version = "1.3.0";
 			System.setProperty(RoboRunnerDefines.PROCESS_NAME_KEY, "MAIN");
 			System.setProperty(RoboRunnerDefines.VERSION_KEY, version);
-			System.out.format("Welcome to RoboRunner %s. Type HELP if unsure.\n", version);
+			System.out.format("Welcome to RoboRunner %s. Type HELP or '?' if unsure.\n", version);
 			new RoboRunnerConsole();
 
 		}
@@ -31,6 +32,7 @@ public class RoboRunnerConsole implements IMessageHandler
 	public RoboRunnerConsole() throws IOException, InterruptedException
 	{
 		mySendConnections = new HashMap<String, SendWorker>();
+		myChallMap = new HashMap<String, RunnerChallenge>();
 		if (RoboRunnerConfig.getInstance().isFirstRun())
 		{
 			System.out.format("Looks like this is your first run - type CONFIG to setup the system.\n");
@@ -43,6 +45,12 @@ public class RoboRunnerConsole implements IMessageHandler
 
 	public void startProcesses() throws IOException
 	{
+		if (mySendConnections.size() > 0)
+		{
+			System.out.format("System is still started use RUN instead\n");
+			return; //TODO: maybe send a auto run 
+		}
+
 		int processCount;
 		try
 		{
@@ -58,21 +66,24 @@ public class RoboRunnerConsole implements IMessageHandler
 		String sep = System.getProperty("file.separator");
 		if (!workDir.endsWith(sep)) workDir += sep;
 
-		List<String> command = new ArrayList<String>();
-		command.add("java");
-		command.add("-cp");
-		command.add(System.getProperty("java.class.path"));
-		command.add("robowiki.console.BattleProcessConsole");
-
-		ProcessBuilder builder = new ProcessBuilder(command);
-		builder.redirectErrorStream(true);
-		Map<String, String> env = builder.environment();
-
 		final List<Process> myProcesses = new ArrayList<Process>();
 		for (int i = 0; i < processCount; i++)
 		{
 			String processName = String.format("PRO_%d", i);
 			String processPath = String.format("%s%s%src%d", workDir, RoboRunnerDefines.ROBOCODE_DIR_NAME, sep, i);
+			String cp = String.format("%s%s%s%s%s", processPath, sep, "libs", sep, "robocode.jar");
+			cp += String.format("%s%s%s%s%s", System.getProperty("path.separator"), workDir, "libs", sep, "roborunner.jar");
+
+			List<String> command = new ArrayList<String>();
+			command.add("java");
+			command.add("-cp");
+			command.add(cp);
+			command.add("robowiki.console.BattleProcessConsole");
+
+			ProcessBuilder builder = new ProcessBuilder(command);
+			builder.redirectErrorStream(true);
+			Map<String, String> env = builder.environment();
+
 			if (!RunnerFunctions.checkPath(processPath, false, true))
 			{
 				// this should not be happen - only if the user deletes the installation directories manually

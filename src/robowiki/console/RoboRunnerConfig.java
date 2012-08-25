@@ -15,6 +15,7 @@ public class RoboRunnerConfig
 	private static Properties		myProperties;
 	private boolean					isFirstRun;
 	private boolean					hasChanged;
+	private boolean					isDebug;
 
 	private RoboRunnerConfig()
 	{
@@ -51,9 +52,19 @@ public class RoboRunnerConfig
 		return instance;
 	}
 
+	public void toggleDebug()
+	{
+		isDebug = !isDebug;
+	}
+
 	public boolean isFirstRun()
 	{
 		return isFirstRun;
+	}
+
+	public boolean isDebug()
+	{
+		return isDebug;
 	}
 
 	public String getSourceRobocodePath()
@@ -88,6 +99,41 @@ public class RoboRunnerConfig
 	public void setSourceBotPath(String path)
 	{
 		myProperties.setProperty(RoboRunnerDefines.BOT_SOURCE_KEY, path);
+		hasChanged = true;
+	}
+
+	public String getChallengeName()
+	{
+		return myProperties.getProperty(RoboRunnerDefines.CHALLENGE_NAME_KEY);
+	}
+
+	public void setChallengeName(String name)
+	{
+		myProperties.setProperty(RoboRunnerDefines.CHALLENGE_NAME_KEY, name);
+		hasChanged = true;
+	}
+
+	public String getChallengeBot()
+	{
+		return myProperties.getProperty(RoboRunnerDefines.CHALLENGE_BOT_KEY);
+	}
+
+	public void setChallengeBot(String name)
+	{
+		myProperties.setProperty(RoboRunnerDefines.CHALLENGE_BOT_KEY, name);
+		hasChanged = true;
+	}
+
+	public String getBotListSeasons()
+	{
+		return myProperties.getProperty(RoboRunnerDefines.BOTLIST_SEASONS_KEY);
+	}
+
+	public void setBotListSeasons(String seasons)
+	{
+		Integer check = Integer.parseInt(seasons);
+		check = Math.max(1, Math.min(5000, check));
+		myProperties.setProperty(RoboRunnerDefines.BOTLIST_SEASONS_KEY, check.toString());
 		hasChanged = true;
 	}
 
@@ -146,4 +192,5 @@ public class RoboRunnerConfig
 		if (workDir.endsWith(sep)) sep = "";
 		return String.format("%s%s%s", workDir, sep, RoboRunnerDefines.MAIN_PROPERTIES_NAME);
 	}
+
 }
