@@ -9,6 +9,7 @@ public class RoboRunnerDefines
 	public static final String	WORKING_COMMAND				= "WORKING_COMMAND";					// server -> proc
 	public static final String	RUN_COMMAND					= "RUN_COMMAND";						// server -> proc
 	public static final String	BATTLE_ERROR				= "BATTLE_ERROR";						// proc --> server
+	public static final String	BATTLE_FINISHED				= "BATTLE_FINISHED";					// proc -> server
 	public static final String	STATUS_COMMAND				= "STATUS_COMMAND";					// proc <--> server
 	public static final String	INFO						= "INFO";								//proc --> server
 	public static final String	WARN						= "WARN";								// proc --> server
@@ -51,5 +52,4 @@ public class RoboRunnerDefines
 	public static final String	BOTLIST_SEASONS_KEY			= "roborunner.botlist.seasons";
 	public static final String	DEBUG_KEY					= "roborunner.debug";
 	public static final String	AUTORUN_KEY					= "roborunner.autorun";
-
 }

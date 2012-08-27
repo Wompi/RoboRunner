@@ -28,17 +28,22 @@ public class RoboRunnerConsole implements IMessageHandler
 		}
 	}
 
+	public boolean hasRunningProcesses()
+	{
+		return mySendConnections.size() > 0;
+	}
+
 	public RoboRunnerConsole() throws IOException, InterruptedException
 	{
 		mySendConnections = new HashMap<String, SendWorker>();
+		final Thread tConsole = new Thread(new ConsoleWorker(this, "CONSOLE"));
+		tConsole.start();
 		if (RoboRunnerConfig.getInstance().isFirstRun())
 		{
 			ConsoleWorker.format("Looks like this is your first run - type CONFIG to setup the system.\n");
 		};
 		final Thread tQueue = new Thread(myQueue = new QueueWorker(this));
 		tQueue.start();
-		final Thread tConsole = new Thread(new ConsoleWorker(this, "CONSOLE"));
-		tConsole.start();
 
 		if (RoboRunnerConfig.getInstance().isAutoRun()) sendRunMessage();
 	}
@@ -47,20 +52,30 @@ public class RoboRunnerConsole implements IMessageHandler
 	{
 		// TODO: parse the input to the current process and not to all
 		// because of the two places where this can be called (autorun|console) it is implemented in the main class
-		try
-		{
-			startProcesses();
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
 
-		RunnerMessage setup = new RunnerMessage();
-		setup.myCommand = RoboRunnerDefines.RUN_COMMAND;
-		setup.myPriority = 1;
-		setup.myResult = "xxx";
-		sendMessage(setup, RoboRunnerDefines.ALL_PROCESSES);
+		RunnerChallenge chall = ChallengeManager.getInstance().getChallengeFor(RoboRunnerDefines.ALL_PROCESSES);
+		if (chall != null)
+		{
+			chall.resetUseCount();
+			try
+			{
+				startProcesses();
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+
+			RunnerMessage setup = new RunnerMessage();
+			setup.myCommand = RoboRunnerDefines.RUN_COMMAND;
+			setup.myPriority = 1;
+			setup.myResult = "xxx";
+			sendMessage(setup, RoboRunnerDefines.ALL_PROCESSES);
+		}
+		else
+		{
+			ConsoleWorker.formatConfig("Sorry, you have no challenge. Type CHAL to set it up and then RUN.\n");
+		}
 	}
 
 	public void startProcesses() throws IOException

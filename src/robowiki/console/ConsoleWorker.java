@@ -58,7 +58,7 @@ public class ConsoleWorker implements Runnable
 		}
 	}
 
-	private void formatConfig(String format, Object... args)
+	public static void formatConfig(String format, Object... args)
 	{
 		myConsole.format(format, args);
 		myConsole.flush();
@@ -90,7 +90,18 @@ public class ConsoleWorker implements Runnable
 				{
 					Runtime.getRuntime().exit(0);
 				}
-				else if (command.equalsIgnoreCase(RoboRunnerDefines.CONFIG)) processConfig(br);
+				else if (command.equalsIgnoreCase(RoboRunnerDefines.CONFIG))
+				{
+					if (!myHandler.hasRunningProcesses())
+					{
+						processConfig(br);
+					}
+					else
+					{
+						formatConfig("Changing the configration with running processes is not supported now.\n");
+						formatConfig("If the KILL command is implemented you can kill processes and reconfigure your system, till then, EXIT and restart.\n");
+					}
+				}
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.CHALLENGE)) processChallenge(br);
 				else ConsoleWorker.format("Sorry dude i don't know what you'r talking about. Was it cheese?\n");
 				isInConfig = false;
@@ -257,8 +268,13 @@ public class ConsoleWorker implements Runnable
 			{
 				if (RunnerFunctions.checkPath(command, false, true, true))
 				{
-					RoboRunnerConfig.getInstance().setSourceRobocodePath(command);
-					break;
+					String sep = System.getProperty("file.separator");
+					String robocodeCheck = String.format("%s%s%s%s", command, (command.endsWith(sep) ? "libs" : sep + "libs"), sep, "robocode.jar");
+					if (RunnerFunctions.checkPath(robocodeCheck, false, false, true))
+					{
+						RoboRunnerConfig.getInstance().setSourceRobocodePath(command);
+						break;
+					}
 				}
 				formatConfig("Try again: ");
 			}

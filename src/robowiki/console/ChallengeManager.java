@@ -68,7 +68,7 @@ public class ChallengeManager
 		String botSource = RoboRunnerConfig.getInstance().getSourceBotPath();
 		if (botSource == null)
 		{
-			ConsoleWorker.format("Sorry, you have no bot path configured. Type CONFIG for setup\n");
+			ConsoleWorker.formatConfig("Sorry, you have no bot path configured. Type CONFIG for setup\n");
 			return false;
 		}
 		String[] botSourceField = botSource.split(RoboRunnerDefines.INTERNAL_PATH_SPLITTER);
@@ -87,12 +87,12 @@ public class ChallengeManager
 
 		if (sourceJar == null)
 		{
-			ConsoleWorker.format("Sorry, can't find %s in:\n", botJar);
+			ConsoleWorker.formatConfig("Sorry, can't find %s in:\n", botJar);
 			for (String botsDir : botSourceField)
 			{
-				ConsoleWorker.format("%s\n", botsDir);
+				ConsoleWorker.formatConfig("%s\n", botsDir);
 			}
-			ConsoleWorker.format("Check spelling, or copy the bot jar to the source directory\n", botJar);
+			ConsoleWorker.formatConfig("Check spelling, copy the bot jar to the source directory or add another bot path in CONFIG\n", botJar);
 			return false;
 		}
 
@@ -103,7 +103,7 @@ public class ChallengeManager
 		}
 		catch (Exception e)
 		{
-			ConsoleWorker.format("Sorry, the configuration is not valid. Type CONFIG to setup the values again.\n");
+			ConsoleWorker.formatConfig("Sorry, the configuration is not valid. Type CONFIG to setup the values again.\n");
 			return false;
 		}
 
@@ -120,7 +120,7 @@ public class ChallengeManager
 			}
 			catch (IOException e)
 			{
-				ConsoleWorker.format("Sorry, something went wrong, could not copy %s -> %s\n", sourceJar, internalBotPath);
+				ConsoleWorker.formatConfig("Sorry, something went wrong, could not copy %s -> %s\n", sourceJar, internalBotPath);
 				return false;
 			}
 		}
@@ -157,7 +157,22 @@ public class ChallengeManager
 	{
 		try
 		{
-			RunnerChallenge result = new RunnerChallenge();
+			RunnerChallenge result = null;
+			if (!myChallengeMap.isEmpty())
+			{
+				// this reuses challs that are still loaded but get a reconfigure
+				for (RunnerChallenge chall : myChallengeMap.values())
+				{
+					if (challName.endsWith(chall.myName))
+					{
+						result = chall;
+						break;
+					}
+				}
+
+			}
+			if (result == null) result = new RunnerChallenge();
+
 			Scanner parser = new Scanner(new File(challName));
 
 			int line = 0;
@@ -275,6 +290,7 @@ public class ChallengeManager
 		if (myChallengeMap.size() > 0) return;
 		String name = RoboRunnerConfig.getInstance().getChallengeName();
 		String challenger = RoboRunnerConfig.getInstance().getChallengeBot();
+		if (!ChallengeManager.getInstance().copyBots(challenger)) return;
 		String seasons = RoboRunnerConfig.getInstance().getBotListSeasons();
 		if (name == null || challenger == null || seasons == null) return;
 		RunnerChallenge autoLoadChal = getChallenge(name);

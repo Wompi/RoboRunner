@@ -30,12 +30,20 @@ public class RunnerChallenge
 		myRounds = 35;
 	}
 
+	/**
+	 * Important before calling this make a hasMoreBattles check. 
+	 * Otherwise this will cause you an Exception and shows you that you are wrong. Thats why no null check is implemented here  
+	 * 
+	 * @return
+	 */
 	public String getMessageString()
 	{
 		//35:1000:1000:botName1,botName2,....
 		String sep = RoboRunnerDefines.RES_SPLITTER;
-		String bots = String.format("%s%s%s", myChallenger, RoboRunnerDefines.BOT_SPLITTER, getBattleList().toString());
+		BotList nextBotList = getBattleList();
+		String bots = String.format("%s%s%s", myChallenger, RoboRunnerDefines.BOT_SPLITTER, nextBotList.toString());
 		String result = String.format("%d%s%d%s%d%s%d%s%s", mySeasons, sep, myRounds, sep, myW, sep, myH, sep, bots);
+		ConsoleWorker.format("Season [%d-%d] for: %s\n", nextBotList.useCount, mySeasons, bots);
 		return result;
 	}
 
@@ -47,15 +55,9 @@ public class RunnerChallenge
 		result += String.format("\t%-13s %s\n", "Challenge:", myName);
 		result += String.format("\t%-13s %d x %d\n", "Battlefield:", myW, myH);
 		result += String.format("\t%-13s %d\n", "Rounds:", myRounds);
-		result += String.format("\t%-13s %d\n", "Seasons per bot(s):", mySeasons);
+		result += String.format("\t%-13s %d\n", "Seasons:", mySeasons);
 		result += String.format("\t%-13s %s\n", "Scoring:", myScoreType);
 		result += String.format("\t%-13s %s\n", "Smart Battles:", ((isSmartBattle) ? "on" : "off"));
-
-		// debug
-		//		for (BotList list : myBots)
-		//		{
-		//			result += String.format("\t%-13s %s\n", "Botlist: ", list.toString());
-		//		}
 		return result;
 	}
 
@@ -71,5 +73,22 @@ public class RunnerChallenge
 		}
 		minUsedList.useCount++;
 		return minUsedList;
+	}
+
+	public void resetUseCount()
+	{
+		for (BotList list : myBots)
+		{
+			list.useCount = 0;
+		}
+	}
+
+	public boolean hasMoreBattles()
+	{
+		for (BotList list : myBots)
+		{
+			if (list.useCount < mySeasons) { return true; }
+		}
+		return false;
 	}
 }

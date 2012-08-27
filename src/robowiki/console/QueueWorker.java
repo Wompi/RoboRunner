@@ -28,6 +28,28 @@ public class QueueWorker implements Runnable
 				{
 					ConsoleWorker.format("Info[%s]: %s\n", newEvent.getDestination(), newEvent.myResult);
 				}
+				else if (newEvent.myCommand.equals(RoboRunnerDefines.BATTLE_FINISHED))
+				{
+					RunnerChallenge chall = ChallengeManager.getInstance().getChallengeFor(RoboRunnerDefines.ALL_PROCESSES);
+
+					boolean hasMore = false;
+					if (chall == null)
+					{
+						ConsoleWorker.format("Sorry, you have no challenge. Type CHAL to set it up and then RUN.\n");
+					}
+					else hasMore = chall.hasMoreBattles();
+
+					// TODO: remove the yes/no it should be a proper output later
+					ConsoleWorker.format("Finish[%s]: %s (%s)\n", newEvent.getDestination(), newEvent.myResult, (hasMore ? "yes" : "no"));
+					if (hasMore)
+					{
+						RunnerMessage setup = new RunnerMessage();
+						setup.myCommand = RoboRunnerDefines.WORKING_COMMAND;
+						setup.myPriority = 1;
+						setup.myResult = chall.getMessageString();
+						myHandler.sendMessage(setup, newEvent.getDestination());
+					}
+				}
 				else if (newEvent.myCommand.equals(RoboRunnerDefines.RESULT))
 				{
 					// TODO: give the result to the challenge and make a nice output
@@ -39,11 +61,14 @@ public class QueueWorker implements Runnable
 					RunnerChallenge chall = ChallengeManager.getInstance().getChallengeFor(RoboRunnerDefines.ALL_PROCESSES);
 					if (chall != null)
 					{
-						RunnerMessage setup = new RunnerMessage();
-						setup.myCommand = RoboRunnerDefines.WORKING_COMMAND;
-						setup.myPriority = 1;
-						setup.myResult = chall.getMessageString();
-						myHandler.sendMessage(setup, newEvent.getDestination());
+						if (chall.hasMoreBattles())
+						{
+							RunnerMessage setup = new RunnerMessage();
+							setup.myCommand = RoboRunnerDefines.WORKING_COMMAND;
+							setup.myPriority = 1;
+							setup.myResult = chall.getMessageString();
+							myHandler.sendMessage(setup, newEvent.getDestination());
+						}
 					}
 					else
 					{

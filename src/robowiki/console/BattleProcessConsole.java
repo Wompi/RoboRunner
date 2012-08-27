@@ -67,10 +67,13 @@ public class BattleProcessConsole implements IMessageHandler
 
 	private void proccedStatusRequest()
 	{
+		// TODO: implement some result line breaks to make the output a little fluffier, don't use \n this will break the messaging
 		RunnerMessage status = new RunnerMessage();
 		status.myCommand = RoboRunnerDefines.INFO;
 		status.myPriority = 1;
-		status.myResult = "Sorry, NOT IMPEMENTED YET.";
+		status.myResult = String.format("Name: %s Initialized: %s Running: %s RoboCode Version: %s  Path: %s  RobotPath: %s",
+				RunnerFunctions.getProcessName(), (myState.isInitialized ? "true" : "false"), (myState.isRunning ? "true" : "false"),
+				(myEngine != null ? myEngine.getVersion() : "not initialized"), RobocodeEngine.getCurrentWorkingDir(), RobocodeEngine.getRobotsDir());
 		sendMessage(status, null);
 	}
 
@@ -120,7 +123,7 @@ public class BattleProcessConsole implements IMessageHandler
 		{
 			RunnerMessage setup = new RunnerMessage();
 			setup.myCommand = RoboRunnerDefines.SETUP_REQUEST;
-			setup.myResult = String.format("I'm now initialized - type STATUS if you want to know more");
+			setup.myResult = String.format("I'm initialized and ask for some setup - type STATUS if you want to know more");
 			setup.myPriority = 1;
 			sendMessage(setup, null);
 			return true;
@@ -158,45 +161,36 @@ public class BattleProcessConsole implements IMessageHandler
 				RobotSpecification[] bots = myEngine.getLocalRepository(myConfig.getBots());
 				BattleSpecification spec = new BattleSpecification(myConfig.getRounds(), bField, bots);
 
-				for (int i = 0; i < myConfig.getSeasons(); i++)
+				myState.isRunning = true;
+				myEngine.runBattle(spec, true);
+
+				// NOTE: because of a bug within the engine at cleanup i wait just a couple of seconds and then go on
+				//				try
+				//				{
+				//					Thread.sleep(1000);
+				//				}
+				//				catch (InterruptedException ex)
+				//				{
+				//					Thread.currentThread().interrupt();
+				//				}
+
+				RunnerMessage result = new RunnerMessage();
+				if (!myState.isStopped)
 				{
-					myState.isRunning = true;
-					myEngine.runBattle(spec, true);
-
-					// NOTE: because of a bug within the engine at cleanup i wait just a couple of seconds and then go on
-					try
-					{
-						Thread.sleep(1000);
-					}
-					catch (InterruptedException ex)
-					{
-						Thread.currentThread().interrupt();
-					}
-
-					if (!myState.isStopped)
-					{
-						RunnerMessage result = new RunnerMessage();
-						result.myCommand = RoboRunnerDefines.INFO;
-						result.myPriority = 1;
-						result.myResult = String.format("Season [%d-%d] is over now.", i + 1, myConfig.getSeasons());
-						sendMessage(result, null);
-					}
-					else
-					{
-						// TODO: it could be possible to send a new SETUP_REQUEST from here to see if the challenge has more members
-						// this would lead to a sort of endless battle or at least until all battles of the challenge proceeded
-						// keep this in mind an re visit this. 
-						// For now it ends after every season and needs a new RUN call 
-
-						RunnerMessage result = new RunnerMessage();
-						result.myCommand = RoboRunnerDefines.INFO;
-						result.myPriority = 1;
-						result.myResult = "I stopped all battles now.";
-						sendMessage(result, null);
-						myState.isStopped = false;
-						break;
-					}
+					// TODO: re visit maybe this could be part of the battle adaptor, but this would loose the STOP request in the current
+					// implementation - or you give the stop request to the battle adaptor but that is bad design i guess 
+					result.myCommand = RoboRunnerDefines.BATTLE_FINISHED;
+					result.myPriority = 1;
+					result.myResult = "Battle is over ... do you have more?";
 				}
+				else
+				{
+					result.myCommand = RoboRunnerDefines.INFO;
+					result.myPriority = 1;
+					result.myResult = "I stopped all battles now.";
+				}
+				sendMessage(result, null);
+
 				myState.isRunning = false;
 				myState.isStopped = false;
 			}
