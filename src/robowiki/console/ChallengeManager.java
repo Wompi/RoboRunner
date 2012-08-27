@@ -49,7 +49,7 @@ public class ChallengeManager
 
 	public RunnerChallenge getChallengeFor(String destination)
 	{
-		// TODO: start the saved challenges if possible automatic
+		autoLoadChallenge(destination);
 		return myChallengeMap.get(destination);
 	}
 
@@ -68,7 +68,7 @@ public class ChallengeManager
 		String botSource = RoboRunnerConfig.getInstance().getSourceBotPath();
 		if (botSource == null)
 		{
-			System.out.format("Sorry, you have no bot path configured. Type CONFIG for setup\n");
+			ConsoleWorker.format("Sorry, you have no bot path configured. Type CONFIG for setup\n");
 			return false;
 		}
 		String[] botSourceField = botSource.split(RoboRunnerDefines.INTERNAL_PATH_SPLITTER);
@@ -78,7 +78,7 @@ public class ChallengeManager
 			if (!botsDir.endsWith(sep)) botsDir += sep;
 			String path = String.format("%s%s", botsDir, botJar);
 
-			if (RunnerFunctions.checkPath(path, false, false))
+			if (RunnerFunctions.checkPath(path, false, false, false))
 			{
 				sourceJar = path;
 				break;
@@ -87,12 +87,12 @@ public class ChallengeManager
 
 		if (sourceJar == null)
 		{
-			System.out.format("Sorry, can't find %s in:\n", botJar);
+			ConsoleWorker.format("Sorry, can't find %s in:\n", botJar);
 			for (String botsDir : botSourceField)
 			{
-				System.out.format("%s\n", botsDir);
+				ConsoleWorker.format("%s\n", botsDir);
 			}
-			System.out.format("Check spelling, or copy the bot jar to the source directory\n", botJar);
+			ConsoleWorker.format("Check spelling, or copy the bot jar to the source directory\n", botJar);
 			return false;
 		}
 
@@ -103,7 +103,7 @@ public class ChallengeManager
 		}
 		catch (Exception e)
 		{
-			System.out.format("Sorry, the configuration is not valid. Type CONFIG to setup the values again.\n");
+			ConsoleWorker.format("Sorry, the configuration is not valid. Type CONFIG to setup the values again.\n");
 			return false;
 		}
 
@@ -113,14 +113,14 @@ public class ChallengeManager
 
 			try
 			{
-				if (!RunnerFunctions.checkPath(internalBotPath, false, false))
+				if (!RunnerFunctions.checkPath(internalBotPath, false, false, false))
 				{
 					RunnerFunctions.copyFolder(new File(sourceJar), new File(internalBotPath), null);
 				}
 			}
 			catch (IOException e)
 			{
-				System.out.format("Sorry, something went wrong, could not copy %s -> %s\n", sourceJar, internalBotPath);
+				ConsoleWorker.format("Sorry, something went wrong, could not copy %s -> %s\n", sourceJar, internalBotPath);
 				return false;
 			}
 		}
@@ -227,7 +227,7 @@ public class ChallengeManager
 								}
 								else
 								{
-									System.out.println("WARNING: " + botName + " doesn't look " + "like a bot name, ignoring.");
+									ConsoleWorker.format("WARNING: %s doesn't look like a bot name, ignoring.\n", botName);
 									return true;
 								}
 							}
@@ -258,6 +258,30 @@ public class ChallengeManager
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	/**
+	 * This loads the challenge from the properties if no challenge is called so far. 
+	 * So if you RUN the processes start up and and if they ask for a challenge this one will be loaded.
+	 * If no CHAl was configured before it just returns and let the main system decide what to do (i guess it just drops a message)
+	 * 
+	 *  TODO: re visit the destination behavior it should not just register all maybe ater versions will register different challenges to 
+	 *  different processes this should be handled
+	 * 
+	 * @param destination
+	 */
+	private void autoLoadChallenge(String destination)
+	{
+		if (myChallengeMap.size() > 0) return;
+		String name = RoboRunnerConfig.getInstance().getChallengeName();
+		String challenger = RoboRunnerConfig.getInstance().getChallengeBot();
+		String seasons = RoboRunnerConfig.getInstance().getBotListSeasons();
+		if (name == null || challenger == null || seasons == null) return;
+		RunnerChallenge autoLoadChal = getChallenge(name);
+		autoLoadChal.myChallenger = challenger;
+		autoLoadChal.mySeasons = Integer.parseInt(seasons);
+		registerChallenge(autoLoadChal, destination);
+		ConsoleWorker.format("Challenge now:\n%s", autoLoadChal.toString());
 	}
 
 	private String getBotJarName(String bot)

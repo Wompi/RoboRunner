@@ -13,7 +13,7 @@ public class RunnerChallenge
 	public int					myRounds;
 	public String				myChallenger;
 	public boolean				isSmartBattle;
-	public int					mySeasonsBotlist;
+	public int					mySeasons;
 
 	// not really needed because the score type can be changed with the output. 
 	// it collects all data and then you can output whatever you want
@@ -35,7 +35,7 @@ public class RunnerChallenge
 		//35:1000:1000:botName1,botName2,....
 		String sep = RoboRunnerDefines.RES_SPLITTER;
 		String bots = String.format("%s%s%s", myChallenger, RoboRunnerDefines.BOT_SPLITTER, getBattleList().toString());
-		String result = String.format("%d%s%d%s%d%s%s", myRounds, sep, myW, sep, myH, sep, bots);
+		String result = String.format("%d%s%d%s%d%s%d%s%s", mySeasons, sep, myRounds, sep, myW, sep, myH, sep, bots);
 		return result;
 	}
 
@@ -47,7 +47,7 @@ public class RunnerChallenge
 		result += String.format("\t%-13s %s\n", "Challenge:", myName);
 		result += String.format("\t%-13s %d x %d\n", "Battlefield:", myW, myH);
 		result += String.format("\t%-13s %d\n", "Rounds:", myRounds);
-		result += String.format("\t%-13s %d\n", "Seasons per bot(s):", mySeasonsBotlist);
+		result += String.format("\t%-13s %d\n", "Seasons per bot(s):", mySeasons);
 		result += String.format("\t%-13s %s\n", "Scoring:", myScoreType);
 		result += String.format("\t%-13s %s\n", "Smart Battles:", ((isSmartBattle) ? "on" : "off"));
 

@@ -1,76 +1,100 @@
 package robowiki.console;
 
 import java.io.BufferedReader;
+import java.io.Console;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.util.ArrayList;
 
 public class ConsoleWorker implements Runnable
 {
-	private final InputStreamReader	myInput;
-	private final RoboRunnerConsole	myHandler;
-	private final String			myName;
+	private final RoboRunnerConsole			myHandler;
+	private final String					myName;
+	private static Console					myConsole;
+	private static boolean					isInConfig;
+	private static ArrayList<ConsoleOutput>	myDelayedOutput;
 
-	public ConsoleWorker(InputStream in, RoboRunnerConsole handler, String name) throws IOException
+	public ConsoleWorker(RoboRunnerConsole handler, String name) throws IOException
 	{
-		myInput = new InputStreamReader(in);
+		myConsole = System.console();
 		myHandler = handler;
 		myName = name;
+		myDelayedOutput = new ArrayList<ConsoleOutput>();
+	}
+
+	public static void format(String format, Object... args)
+	{
+		if (myConsole == null) return;
+		if (!isInConfig)
+		{
+			myConsole.format("\r\r");
+			myConsole.format(format, args);
+			myConsole.format("> ");
+			myConsole.flush();
+		}
+		else
+		{
+			ConsoleOutput delayed = new ConsoleOutput();
+			delayed.myFormat = format;
+			delayed.myArgs = args;
+			myDelayedOutput.add(delayed);
+		}
+	}
+
+	private void printDelayed()
+	{
+		if (myDelayedOutput.size() > 0)
+		{
+			//TODO: re visit maybe it needs some concurrency handling. New output could arrive while printing this 
+
+			myConsole.format("\nDelayed output while you where configurering:\n");
+			for (ConsoleOutput out : myDelayedOutput)
+			{
+				myConsole.format(out.myFormat, out.myArgs);
+			}
+			myConsole.flush();
+			myDelayedOutput.clear();
+		}
+	}
+
+	private void formatConfig(String format, Object... args)
+	{
+		myConsole.format(format, args);
+		myConsole.flush();
 	}
 
 	@Override
 	public void run()
 	{
-		BufferedReader br = new BufferedReader(myInput);
+		BufferedReader br = new BufferedReader(myConsole.reader());
+		//		Scanner scan = new Scanner(myConsole.reader());
 
 		while (true)
 		{
 			try
 			{
-				System.out.format("> ");
+				format("");
 				String command = br.readLine();
 
+				isInConfig = true;
 				if (command.equals(""))
 				{} // do nothing on empty input
-				else if (command.equalsIgnoreCase(RoboRunnerDefines.START)) processStart();
-				else if (command.equalsIgnoreCase(RoboRunnerDefines.INIT_REQUEST))
-				{
-					RunnerMessage msg = new RunnerMessage();
-					msg.myCommand = RoboRunnerDefines.INIT_REQUEST;
-					msg.myPriority = 1;
-					msg.myResult = "you can now init";
-					myHandler.sendMessage(msg, RoboRunnerDefines.ALL_PROCESSES);
-				}
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.STOP)) processStop();
+				else if (command.equalsIgnoreCase(RoboRunnerDefines.STATUS)) processStatus();
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.DEBUG)) processDebug();
+				else if (command.equalsIgnoreCase(RoboRunnerDefines.AUTORUN)) processAutoRun();
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.HELP) || command.equalsIgnoreCase(RoboRunnerDefines.SHORT_HELP)) processHelp();
-				else if (command.equalsIgnoreCase(RoboRunnerDefines.RUN))
-				{
-					// TODO: parse the input to the current process and not to all
-					RunnerChallenge chall = ChallengeManager.getInstance().getChallengeFor(RoboRunnerDefines.ALL_PROCESSES);
-					if (chall != null)
-					{
-						RunnerMessage setup = new RunnerMessage();
-						setup.myCommand = RoboRunnerDefines.SETUP;
-						setup.myPriority = 1;
-						setup.myResult = chall.getMessageString();
-						myHandler.sendMessage(setup, RoboRunnerDefines.ALL_PROCESSES);
-					}
-					else
-					{
-						System.out.format("Sorry, you have no challenge. Type CHAL to set it up and then RUN.\n");
-					}
-				}
+				else if (command.equalsIgnoreCase(RoboRunnerDefines.RUN)) processRun();
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.QUIT) || command.equalsIgnoreCase(RoboRunnerDefines.EXIT))
 				{
 					Runtime.getRuntime().exit(0);
 				}
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.CONFIG)) processConfig(br);
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.CHALLENGE)) processChallenge(br);
-				else System.out.format("Sorry dude i don't know what you'r talking about. Was it cheese?\n");
-
+				else ConsoleWorker.format("Sorry dude i don't know what you'r talking about. Was it cheese?\n");
+				isInConfig = false;
+				printDelayed();
 			}
 			catch (IOException e)
 			{
@@ -79,54 +103,60 @@ public class ConsoleWorker implements Runnable
 		}
 	}
 
+	private void processStatus()
+	{
+		RunnerMessage setup = new RunnerMessage();
+		setup.myCommand = RoboRunnerDefines.STATUS_COMMAND;
+		setup.myPriority = 1;
+		setup.myResult = "xxx";
+		myHandler.sendMessage(setup, RoboRunnerDefines.ALL_PROCESSES);
+	}
+
+	private void processRun()
+	{
+		myHandler.sendRunMessage();
+	}
+
 	private void processHelp()
 	{
-		System.out.format("All comands can be written upper or lower case.\n");
+		formatConfig("All comands can be written upper or lower case.\n");
 
-		System.out.format("\tHELP - this one. You can also type '?'\n");
-		System.out.format("\tCONFIG - Leads you through the configuration settings. Should be the first step after install.\n");
-		System.out.format("\tCHAL - Leads you through the challenge settings. You can change the challenge at any time.\n");
-		System.out
-				.format("\tSTART - starts all processes. First it initializes the instances, then checks the config, setup and runs the challenge\n");
-		System.out.format("\tRUN - if a challenge is finished, you can set up another or run the same again (no new initialization)\n");
-		System.out.format("\tSTOP - stops all running challenges. The instances will not be killed.\n");
-		System.out.format("\tINIT - just starts all instances (NOT IMPLEMENTED YET)\n");
-		System.out.format("\tKILL - kills all processes (NOT IMPLEMENTED YET) \n");
-		System.out.format("\tDEBUG - toggles the debug output\n");
+		formatConfig("\tHELP - this one. You can also type '?'\n");
+		formatConfig("\tCONFIG - Leads you through the configuration settings. Should be the first step after install.\n");
+		formatConfig("\tCHAL - Leads you through the challenge settings. You can change the challenge at any time.\n");
+		formatConfig("\tRUN - runs the processes, if not initiaized the processes will be startet, after that it runs the current challenge\n");
+		formatConfig("\tSTOP - stops all running challenges. The instances will not be killed.\n");
+		formatConfig("\tKILL - kills all processes (NOT IMPLEMENTED YET) \n");
+		formatConfig("\tDEBUG - toggles the debug output\n");
+		formatConfig("\tAUTO - toggles the auto run. This means if you start the program it used the last challenge and runs it again\n");
+		formatConfig("\tQUIT/EXIT  - terminates RoboRunner\n");
+	}
+
+	private void processAutoRun()
+	{
+		RoboRunnerConfig.getInstance().toggleAutoRun();
+		formatConfig("AUTORUN is now %s\n", ((RoboRunnerConfig.getInstance().isAutoRun()) ? "on" : "off"));
 	}
 
 	private void processDebug()
 	{
 		RoboRunnerConfig.getInstance().toggleDebug();
-		System.out.format("DEBUG is now %s\n", ((RoboRunnerConfig.getInstance().isDebug()) ? "on" : "off"));
-	}
-
-	private void processStart()
-	{
-		try
-		{
-			myHandler.startProcesses();
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
+		formatConfig("DEBUG is now %s\n", ((RoboRunnerConfig.getInstance().isDebug()) ? "on" : "off"));
 	}
 
 	private void processStop()
 	{
 		RunnerMessage setup = new RunnerMessage();
-		setup.myCommand = RoboRunnerDefines.STOP_REQUEST;
+		setup.myCommand = RoboRunnerDefines.STOP_COMMAND;
 		setup.myPriority = 1;
 		setup.myResult = "Please stop all activities";
 		myHandler.sendMessage(setup, RoboRunnerDefines.ALL_PROCESSES);
-
 	}
 
 	private void processChallenge(BufferedReader br) throws IOException
 	{
 		String challengeBot = null;
-		System.out.format("Your challenge bot [%s]: ", challengeBot = RoboRunnerConfig.getInstance().getChallengeBot());
+		formatConfig("Your challenge bot [%s]: ", challengeBot = RoboRunnerConfig.getInstance().getChallengeBot());
 		String command;
 		while (true)
 		{
@@ -139,12 +169,12 @@ public class ConsoleWorker implements Runnable
 					challengeBot = command;
 					break;
 				}
-				System.out.format("Try again: ");
+				formatConfig("Try again: ");
 			}
 			else break;
 		}
 
-		System.out.format("Type challenge name [%s]: ", RoboRunnerConfig.getInstance().getChallengeName());
+		formatConfig("Type challenge name [%s]: ", RoboRunnerConfig.getInstance().getChallengeName());
 
 		RunnerChallenge challenge = null;
 		while (true)
@@ -152,13 +182,13 @@ public class ConsoleWorker implements Runnable
 			command = br.readLine();
 			if (!command.equals(""))
 			{
-				if (RunnerFunctions.checkPath(command, false, false))
+				if (RunnerFunctions.checkPath(command, false, false, true))
 				{
 					challenge = ChallengeManager.getInstance().getChallenge(command);
 					RoboRunnerConfig.getInstance().setChallengeName(command);
 					break;
 				}
-				System.out.format("Try again: ");
+				formatConfig("Try again: ");
 			}
 			else
 			{
@@ -171,7 +201,7 @@ public class ConsoleWorker implements Runnable
 		}
 
 		String seasons = RoboRunnerConfig.getInstance().getBotListSeasons();
-		System.out.format("Seasons per bot list (1-5000): [%s]: ", seasons);
+		formatConfig("Seasons per bot list (1-5000): [%s]: ", seasons);
 		while (true)
 		{
 			try
@@ -186,57 +216,57 @@ public class ConsoleWorker implements Runnable
 			}
 			catch (NumberFormatException e)
 			{
-				System.out.format("It has to be a number.\n");
-				System.out.format("Try again: ");
+				formatConfig("It has to be a number.\n");
+				formatConfig("Try again: ");
 			}
 		}
 
 		if (seasons != null)
 		{
-			challenge.mySeasonsBotlist = Integer.parseInt(seasons);
+			challenge.mySeasons = Integer.parseInt(seasons);
 		}
 		else
 		{
-			System.out.format("Sorry, you have no seasons configured. Try CONFIG again.\n");
+			format("Sorry, you have no seasons configured. Try CONFIG again.\n");
 			return;
 		}
 
 		if (challengeBot != null)
 		{
 			challenge.myChallenger = challengeBot;
-			System.out.format("Challenge now:\n%s", challenge.toString());
+			formatConfig("Challenge now:\n%s", challenge.toString());
 
 			// TODO: revisit to change the process names
 			ChallengeManager.getInstance().registerChallenge(challenge, RoboRunnerDefines.ALL_PROCESSES);
 		}
 		else
 		{
-			System.out.format("Sorry, you have no challenge bot. Try CONFIG again.\n");
+			formatConfig("Sorry, you have no challenge bot. Try CONFIG again.\n");
 			return;
 		}
 	}
 
 	private void processConfig(BufferedReader br) throws IOException
 	{
-		System.out.format("Source RoboCode Path[%s]: ", RoboRunnerConfig.getInstance().getSourceRobocodePath());
+		formatConfig("Source RoboCode Path[%s]: ", RoboRunnerConfig.getInstance().getSourceRobocodePath());
 		String command;
 		while (true)
 		{
 			command = br.readLine();
 			if (!command.equals(""))
 			{
-				if (RunnerFunctions.checkPath(command, false, true))
+				if (RunnerFunctions.checkPath(command, false, true, true))
 				{
 					RoboRunnerConfig.getInstance().setSourceRobocodePath(command);
 					break;
 				}
-				System.out.format("Try again: ");
+				formatConfig("Try again: ");
 			}
 			else break;
 		}
 
 		String lastCount = RoboRunnerConfig.getInstance().getInstallCount();
-		System.out.format("How many installations (1-20) [%s]: ", lastCount);
+		formatConfig("How many installations (1-20) [%s]: ", lastCount);
 		while (true)
 		{
 			try
@@ -261,71 +291,42 @@ public class ConsoleWorker implements Runnable
 			}
 			catch (NumberFormatException e)
 			{
-				System.out.format("It has to be a number.\n");
-				System.out.format("Try again: ");
+				formatConfig("It has to be a number.\n");
+				formatConfig("Try again: ");
 			}
 		}
 
-		System.out.format("Robot path [%s]: ", RoboRunnerConfig.getInstance().getSourceBotPath());
+		formatConfig("Robot path [%s]: ", RoboRunnerConfig.getInstance().getSourceBotPath());
 		while (true)
 		{
 			command = br.readLine();
 			if (!command.equals(""))
 			{
-				if (RunnerFunctions.checkPath(command, true, true))
+				if (RunnerFunctions.checkPath(command, true, true, true))
 				{
 					RoboRunnerConfig.getInstance().setSourceBotPath(command);
 					break;
 				}
-				System.out.format("Try again: ");
+				formatConfig("Try again: ");
 			}
 			else break;
 
 		}
 	}
 
-	//	private boolean maintainRobocode(String sourceDir)
-	//	{
-	//		if (!RunnerFunctions.checkPath(sourceDir, false, true)) { return false; }
-	//
-	//		File robocodeSrc = new File(sourceDir);
-	//
-	//		FilenameFilter directoryFilter = new FilenameFilter()
-	//		{
-	//			@Override
-	//			public boolean accept(File dir, String name)
-	//			{
-	//				if (name.equalsIgnoreCase(RoboRunnerDefines.JAR_DIR_NAME)) return true;
-	//				if (dir.getName().equalsIgnoreCase(RoboRunnerDefines.JAR_DIR_NAME)) return true;
-	//				return false;
-	//			}
-	//		};
-	//
-	//		String destDir = System.getProperty("user.dir");
-	//		try
-	//		{
-	//			RunnerFunctions.copyFolder(robocodeSrc, new File(destDir), directoryFilter);
-	//		}
-	//		catch (IOException e)
-	//		{
-	//			e.printStackTrace();
-	//		}
-	//		return true;
-	//	}
-
 	private boolean maintainCopys(int copys)
 	{
 		String sourceDir = RoboRunnerConfig.getInstance().getSourceRobocodePath();
-		if (!RunnerFunctions.checkPath(sourceDir, false, true))
+		if (!RunnerFunctions.checkPath(sourceDir, false, true, true))
 		{
-			System.out.format("Sorry, you have not configured the robocode source path! Try CONFIG again.\n");
+			formatConfig("Sorry, you have not configured the robocode source path! Try CONFIG again.\n");
 			return false;
 		}
 
 		File root = new File(RoboRunnerDefines.ROBOCODE_DIR_NAME);
 		if (!root.exists())
 		{
-			System.out.format("Directory %s don't exist - i will make one.\n", RoboRunnerDefines.ROBOCODE_DIR_NAME);
+			formatConfig("Directory %s don't exist - i will make one.\n", RoboRunnerDefines.ROBOCODE_DIR_NAME);
 			root.mkdir();
 		}
 		else
@@ -352,7 +353,7 @@ public class ConsoleWorker implements Runnable
 			@Override
 			public boolean accept(File dir, String name)
 			{
-				//System.out.format("Filter: %s - %s\n",dir.getName(),name);
+				//ConsoleWorker.format("Filter: %s - %s\n",dir.getName(),name);
 				if (name.equalsIgnoreCase("libs")) return true;
 				if (name.equalsIgnoreCase("robots")) return true;
 				if (name.equalsIgnoreCase("config")) return true;
@@ -377,4 +378,10 @@ public class ConsoleWorker implements Runnable
 		}
 		return true;
 	}
+}
+
+class ConsoleOutput
+{
+	String		myFormat;
+	Object[]	myArgs;
 }

@@ -8,9 +8,8 @@ import java.util.Map;
 
 public class RoboRunnerConsole implements IMessageHandler
 {
-	private QueueWorker								myQueue;
-	private final HashMap<String, SendWorker>		mySendConnections;
-	private final HashMap<String, RunnerChallenge>	myChallMap;
+	private QueueWorker							myQueue;
+	private final HashMap<String, SendWorker>	mySendConnections;
 
 	public static void main(String[] args)
 	{
@@ -19,7 +18,7 @@ public class RoboRunnerConsole implements IMessageHandler
 			String version = "1.3.0";
 			System.setProperty(RoboRunnerDefines.PROCESS_NAME_KEY, "MAIN");
 			System.setProperty(RoboRunnerDefines.VERSION_KEY, version);
-			System.out.format("Welcome to RoboRunner %s. Type HELP or '?' if unsure.\n", version);
+			System.out.format("\nWelcome to RoboRunner %s. Type HELP or '?' if unsure.\n\n", version);
 			new RoboRunnerConsole();
 
 		}
@@ -32,24 +31,44 @@ public class RoboRunnerConsole implements IMessageHandler
 	public RoboRunnerConsole() throws IOException, InterruptedException
 	{
 		mySendConnections = new HashMap<String, SendWorker>();
-		myChallMap = new HashMap<String, RunnerChallenge>();
 		if (RoboRunnerConfig.getInstance().isFirstRun())
 		{
-			System.out.format("Looks like this is your first run - type CONFIG to setup the system.\n");
+			ConsoleWorker.format("Looks like this is your first run - type CONFIG to setup the system.\n");
 		};
 		final Thread tQueue = new Thread(myQueue = new QueueWorker(this));
 		tQueue.start();
-		final Thread tConsole = new Thread(new ConsoleWorker(System.in, this, "CONSOLE"));
+		final Thread tConsole = new Thread(new ConsoleWorker(this, "CONSOLE"));
 		tConsole.start();
+
+		if (RoboRunnerConfig.getInstance().isAutoRun()) sendRunMessage();
+	}
+
+	public void sendRunMessage()
+	{
+		// TODO: parse the input to the current process and not to all
+		// because of the two places where this can be called (autorun|console) it is implemented in the main class
+		try
+		{
+			startProcesses();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+
+		RunnerMessage setup = new RunnerMessage();
+		setup.myCommand = RoboRunnerDefines.RUN_COMMAND;
+		setup.myPriority = 1;
+		setup.myResult = "xxx";
+		sendMessage(setup, RoboRunnerDefines.ALL_PROCESSES);
 	}
 
 	public void startProcesses() throws IOException
 	{
-		if (mySendConnections.size() > 0)
-		{
-			System.out.format("System is still started use RUN instead\n");
-			return; //TODO: maybe send a auto run 
-		}
+		// NOTE: the run command from the console tries to start the processes as well with a recall of this command the connections should
+		// still be available. the kill command can delete the processes and after this it should build a new process
+		// TODO: make it dynamic so that we can kill just one process and restart it with run after this automatically
+		if (mySendConnections.size() > 0) { return; }
 
 		int processCount;
 		try
@@ -58,7 +77,7 @@ public class RoboRunnerConsole implements IMessageHandler
 		}
 		catch (Exception e)
 		{
-			System.out.format("Sorry, the configuration is not valid. Type CONFIG to setup the values.\n");
+			ConsoleWorker.format("Sorry, the configuration is not valid. Type CONFIG to setup the values.\n");
 			return;
 		}
 
@@ -84,10 +103,10 @@ public class RoboRunnerConsole implements IMessageHandler
 			builder.redirectErrorStream(true);
 			Map<String, String> env = builder.environment();
 
-			if (!RunnerFunctions.checkPath(processPath, false, true))
+			if (!RunnerFunctions.checkPath(processPath, false, true, true))
 			{
 				// this should not be happen - only if the user deletes the installation directories manually
-				System.out.format("Sorry, your installations are not valid. Type CONFIG to setup the values.\n");
+				ConsoleWorker.format("Sorry, your installations are not valid. Type CONFIG to setup the values.\n");
 				return;
 			}
 
@@ -102,7 +121,7 @@ public class RoboRunnerConsole implements IMessageHandler
 			final Thread tReceive = new Thread(new ReceiveWorker(battleProcess.getInputStream(), this, processName));
 			tSend.start();
 			tReceive.start();
-			System.out.format("Process [%s] started ..\n", processName);
+			ConsoleWorker.format("Process [%s] started ..\n", processName);
 		}
 
 		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable()
@@ -110,7 +129,7 @@ public class RoboRunnerConsole implements IMessageHandler
 			@Override
 			public void run()
 			{
-				System.out.format("Shutdown...\n");
+				System.out.format("Shutdown...\n"); // Shutdown Hooks are going to the System out and not to the console
 				for (Process proc : myProcesses)
 				{
 					proc.destroy();

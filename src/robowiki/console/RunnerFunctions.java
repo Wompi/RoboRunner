@@ -24,11 +24,11 @@ public class RunnerFunctions
 	}
 
 	// with this function you can check if a path exists. Useful for configuration stuff
-	public static boolean checkPath(String path, boolean isMulti, boolean isDirectoryCheck)
+	public static boolean checkPath(String path, boolean isMulti, boolean isDirectoryCheck, boolean shouldExist)
 	{
 		if (path == null)
 		{
-			System.out.format("path - null does not exist, try again\n");
+			ConsoleWorker.format("path - null does not exist, try again\n");
 			return false;
 		}
 
@@ -57,7 +57,7 @@ public class RunnerFunctions
 				//				}
 				if (!pathCheck.isDirectory())
 				{
-					System.out.format("Sorry, %s is not a directory.\n", splitPath);
+					ConsoleWorker.format("Sorry, %s is not a directory.\n", splitPath);
 					result = false;
 				}
 			}
@@ -65,7 +65,7 @@ public class RunnerFunctions
 			{
 				if (!pathCheck.exists())
 				{
-					System.out.format("Sorry, %s does not exist.\n", splitPath);
+					if (shouldExist) ConsoleWorker.format("Sorry, %s does not exist.\n", splitPath);
 					result = false;
 				}
 			}
@@ -81,7 +81,7 @@ public class RunnerFunctions
 			if (file.list().length == 0)
 			{
 				file.delete();
-				System.out.format("Directory is deleted : %s\n", file.getAbsolutePath());
+				ConsoleWorker.format("Directory is deleted : %s\n", file.getAbsolutePath());
 			}
 			else
 			{
@@ -94,14 +94,14 @@ public class RunnerFunctions
 				if (file.list().length == 0)
 				{
 					file.delete();
-					System.out.format("Directory is deleted : %s\n", file.getAbsolutePath());
+					ConsoleWorker.format("Directory is deleted : %s\n", file.getAbsolutePath());
 				}
 			}
 		}
 		else
 		{
 			file.delete();
-			System.out.format("File is deleted : %s\n", file.getAbsolutePath());
+			ConsoleWorker.format("File is deleted : %s\n", file.getAbsolutePath());
 		}
 	}
 
@@ -111,14 +111,14 @@ public class RunnerFunctions
 		{
 			if (directoryFilter == null)
 			{
-				System.out.format("ERROR: src i a directory and needs a filter to work\n");
+				ConsoleWorker.format("ERROR: src i a directory and needs a filter to work\n");
 				return;
 			}
 
 			if (!dest.exists())
 			{
 				dest.mkdir();
-				System.out.format("Directory copied from %s to %s\n", src, dest);
+				ConsoleWorker.format("Directory copied from %s to %s\n", src, dest);
 			}
 			String files[] = src.list(directoryFilter);
 
@@ -141,7 +141,7 @@ public class RunnerFunctions
 			}
 			in.close();
 			out.close();
-			System.out.format("File copied from %s to %s\n", src, dest);
+			ConsoleWorker.format("File copied from %s to %s\n", src, dest);
 		}
 	}
 

@@ -15,7 +15,6 @@ public class RoboRunnerConfig
 	private static Properties		myProperties;
 	private boolean					isFirstRun;
 	private boolean					hasChanged;
-	private boolean					isDebug;
 
 	private RoboRunnerConfig()
 	{
@@ -43,7 +42,7 @@ public class RoboRunnerConfig
 					// because this is a shutdown hook the file should not be written if the configuration is not changed
 					if (RoboRunnerConfig.getInstance().hasChanged)
 					{
-						System.out.format("Shutdown: store settings...\n");
+						System.out.format("Shutdown: store settings...\n"); // Shutdown Hooks are going to the System out and not to the console
 						instance.store();
 					}
 				}
@@ -54,7 +53,18 @@ public class RoboRunnerConfig
 
 	public void toggleDebug()
 	{
-		isDebug = !isDebug;
+		// TODO: brrr re visit this - it looks horrible
+		boolean debug = isDebug();
+		if (debug) setDebug("1");
+		else setDebug("0");
+	}
+
+	public void toggleAutoRun()
+	{
+		// TODO: brrr re visit this - it looks horrible
+		boolean run = isAutoRun();
+		if (run) setAutoRun("1");
+		else setAutoRun("0");
 	}
 
 	public boolean isFirstRun()
@@ -64,7 +74,30 @@ public class RoboRunnerConfig
 
 	public boolean isDebug()
 	{
-		return isDebug;
+		String value = myProperties.getProperty(RoboRunnerDefines.DEBUG_KEY);
+		if (value == null) return false;
+		return Boolean.parseBoolean(value);
+	}
+
+	public boolean isAutoRun()
+	{
+		String value = myProperties.getProperty(RoboRunnerDefines.AUTORUN_KEY);
+		if (value == null) return false;
+		return Boolean.parseBoolean(value);
+	}
+
+	public void setDebug(String value) throws NumberFormatException
+	{
+		Integer bool = Math.max(0, Math.min(1, Integer.parseInt(value)));
+		myProperties.setProperty(RoboRunnerDefines.DEBUG_KEY, (bool == 0) ? "true" : "false");
+		hasChanged = true;
+	}
+
+	public void setAutoRun(String value) throws NumberFormatException
+	{
+		Integer bool = Math.max(0, Math.min(1, Integer.parseInt(value)));
+		myProperties.setProperty(RoboRunnerDefines.AUTORUN_KEY, (bool == 0) ? "true" : "false");
+		hasChanged = true;
 	}
 
 	public String getSourceRobocodePath()
@@ -192,5 +225,4 @@ public class RoboRunnerConfig
 		if (workDir.endsWith(sep)) sep = "";
 		return String.format("%s%s%s", workDir, sep, RoboRunnerDefines.MAIN_PROPERTIES_NAME);
 	}
-
 }
