@@ -95,6 +95,14 @@ public class RoboRunnerConsole implements IMessageHandler
 
 			List<String> command = new ArrayList<String>();
 			command.add("java");
+			command.add("-Xmx512M");
+
+			// TODO: do a little research what other OS look like and maybe give the appropriate name to them 
+			if (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)
+			{
+				command.add("-Xdock:icon=robocode.ico");
+				command.add(String.format("-Xdock:name=RoboRunnerProcess %d", i));
+			}
 			command.add("-cp");
 			command.add(cp);
 			command.add("robowiki.console.BattleProcessConsole");
