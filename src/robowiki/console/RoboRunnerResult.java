@@ -16,5 +16,4 @@ public class RoboRunnerResult
 	public int		myFirsts;
 	public int		mySeconds;
 	public int		myThirds;
-
 }

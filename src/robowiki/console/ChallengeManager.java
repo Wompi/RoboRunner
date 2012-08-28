@@ -2,6 +2,7 @@ package robowiki.console;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
@@ -22,10 +23,13 @@ public class ChallengeManager
 
 	private final HashMap<String, RunnerChallenge>	myChallengeMap;
 
+	private final ArrayList<RunnerChallenge>		myOldChallenges;
+
 	private ChallengeManager()
 	{
 		myChallengeMap = new HashMap<String, RunnerChallenge>();
 		myResultManager = new ResultsManager();
+		myOldChallenges = new ArrayList<RunnerChallenge>();
 	}
 
 	public RunnerChallenge getChallenge(String name)
@@ -47,7 +51,25 @@ public class ChallengeManager
 
 	public void registerChallenge(RunnerChallenge chall, String destination)
 	{
-		myChallengeMap.put(destination, chall);
+		RunnerChallenge old = myChallengeMap.put(destination, chall);
+		if (old != null)
+		{
+			myOldChallenges.add(old);
+		}
+	}
+
+	public RunnerChallenge getChallengeByID(int hashID)
+	{
+		for (RunnerChallenge chal : myChallengeMap.values())
+		{
+			if (chal.hashCode() == hashID) { return chal; }
+		}
+		for (RunnerChallenge chal : myOldChallenges)
+		{
+			if (chal.hashCode() == hashID) { return chal; }
+		}
+		// this never should happen because the ID has to be generated from a saved challenge so far
+		throw new IllegalStateException("no challenge for ID saved");
 	}
 
 	public RunnerChallenge getChallengeFor(String destination)
