@@ -4,14 +4,17 @@ import robocode.BattleResults;
 import robocode.control.events.BattleAdaptor;
 import robocode.control.events.BattleCompletedEvent;
 import robocode.control.events.BattleErrorEvent;
+import robowiki.console.process.ProcessConfiguration;
 
 public class DefaultBattleAdaptor extends BattleAdaptor
 {
-	private final IMessageHandler	myHandler;
+	private final IMessageHandler		myHandler;
+	private final ProcessConfiguration	myConfig;
 
-	public DefaultBattleAdaptor(IMessageHandler handler)
+	public DefaultBattleAdaptor(IMessageHandler handler, ProcessConfiguration config)
 	{
 		myHandler = handler;
+		myConfig = config;
 	}
 
 	@Override
@@ -37,7 +40,8 @@ public class DefaultBattleAdaptor extends BattleAdaptor
 			RunnerMessage result = new RunnerMessage();
 			result.myCommand = RoboRunnerDefines.RESULT;
 			result.myPriority = 1;
-			result.myResult = String.format("%d%s%d%s%d%s%d%s%d%s%d%s%d%s%d%s%d%s%s", r.getScore(), sep, r.getSurvival(), sep, r.getBulletDamage(),
+			result.myResult = String.format("%d%s%d%s%d%s%d%s%d%s%d%s%d%s%d%s%d%s%d%s%d%s%d%s%s", myConfig.getChallengeID(), sep,
+					myConfig.getCurrentSeason(), sep, r.getScore(), sep, r.getSurvival(), sep, r.getBulletDamage(), sep, r.getLastSurvivorBonus(),
 					sep, r.getBulletDamageBonus(), sep, r.getRamDamage(), sep, r.getRamDamageBonus(), sep, r.getFirsts(), sep, r.getSeconds(), sep,
 					r.getThirds(), sep, r.getTeamLeaderName());
 			myHandler.sendMessage(result, null);

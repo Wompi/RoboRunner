@@ -86,6 +86,7 @@ public class ConsoleWorker implements Runnable
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.AUTORUN)) processAutoRun();
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.HELP) || command.equalsIgnoreCase(RoboRunnerDefines.SHORT_HELP)) processHelp();
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.RUN)) processRun();
+				else if (command.equalsIgnoreCase(RoboRunnerDefines.RESULT)) processResult();
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.QUIT) || command.equalsIgnoreCase(RoboRunnerDefines.EXIT))
 				{
 					Runtime.getRuntime().exit(0);
@@ -114,6 +115,11 @@ public class ConsoleWorker implements Runnable
 		}
 	}
 
+	private void processResult()
+	{
+		ChallengeManager.getInstance().myResultManager.printAll();
+	}
+
 	private void processStatus()
 	{
 		RunnerMessage setup = new RunnerMessage();
@@ -138,6 +144,8 @@ public class ConsoleWorker implements Runnable
 		formatConfig("\tRUN - runs the processes, if not initiaized the processes will be startet, after that it runs the current challenge\n");
 		formatConfig("\tSTOP - stops all running challenges. The instances will not be killed.\n");
 		formatConfig("\tKILL - kills all processes (NOT IMPLEMENTED YET) \n");
+		formatConfig("\tSTATUS - Prints the current status of every process. Nothing if no process is started\n");
+		formatConfig("\tRESULT - if you have results so far it shows you the statistics\n");
 		formatConfig("\tDEBUG - toggles the debug output\n");
 		formatConfig("\tAUTO - toggles the auto run. This means if you start the program it used the last challenge and runs it again\n");
 		formatConfig("\tQUIT/EXIT  - terminates RoboRunner\n");

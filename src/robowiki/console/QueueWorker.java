@@ -50,11 +50,7 @@ public class QueueWorker implements Runnable
 						myHandler.sendMessage(setup, newEvent.getDestination());
 					}
 				}
-				else if (newEvent.myCommand.equals(RoboRunnerDefines.RESULT))
-				{
-					// TODO: give the result to the challenge and make a nice output
-					ConsoleWorker.format("Result[%s]: %s\n", newEvent.getDestination(), newEvent.myResult);
-				}
+				else if (newEvent.myCommand.equals(RoboRunnerDefines.RESULT)) processResult(newEvent);
 				else if (newEvent.myCommand.equals(RoboRunnerDefines.SETUP_REQUEST))
 				{
 					ConsoleWorker.format("%s %s\n", newEvent.getDestination(), newEvent.myResult);
@@ -79,6 +75,38 @@ public class QueueWorker implements Runnable
 			catch (InterruptedException e)
 			{}
 		}
+	}
+
+	private void processResult(ProcessMessage newEvent)
+	{
+		// TODO: give the result to the challenge and make a nice output
+
+		String[] parseResult = newEvent.myResult.split(RoboRunnerDefines.RES_SPLITTER);
+		RoboRunnerResult result = new RoboRunnerResult();
+		try
+		{
+			int i = 0;
+			result.myChallenge = Integer.parseInt(parseResult[i++]);
+			result.mySeason = Integer.parseInt(parseResult[i++]);
+			result.myScore = Integer.parseInt(parseResult[i++]);
+			result.mySurvival = Integer.parseInt(parseResult[i++]);
+			result.myBulletDmg = Integer.parseInt(parseResult[i++]);
+			result.mySurvivalBonus = Integer.parseInt(parseResult[i++]);
+			result.myBulletBonus = Integer.parseInt(parseResult[i++]);
+			result.myRamDmg = Integer.parseInt(parseResult[i++]);
+			result.myRamBonus = Integer.parseInt(parseResult[i++]);
+			result.myFirsts = Integer.parseInt(parseResult[i++]);
+			result.mySeconds = Integer.parseInt(parseResult[i++]);
+			result.myThirds = Integer.parseInt(parseResult[i++]);
+			result.myID = parseResult[i++];
+			ConsoleWorker.format("Result[%s]: season %d arrived for %s. Type RESULT for the stats.\n", newEvent.getDestination(), result.mySeason,
+					result.myID);
+		}
+		catch (NumberFormatException e0)
+		{
+			e0.printStackTrace();
+		}
+		ChallengeManager.getInstance().myResultManager.registerResult(result);
 	}
 
 	public void addMessage(ProcessMessage msg)

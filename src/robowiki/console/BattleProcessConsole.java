@@ -12,10 +12,9 @@ import robowiki.console.process.ProcessConfiguration;
 
 public class BattleProcessConsole implements IMessageHandler
 {
-	private RobocodeEngine			myEngine;
-	private ProcessConfiguration	myConfig;
-	private IBattleListener			myBattleListener;
-	private final EngineState		myState;
+	private RobocodeEngine		myEngine;
+	private IBattleListener		myBattleListener;
+	private final EngineState	myState;
 
 	public static void main(String[] args)
 	{
@@ -121,6 +120,7 @@ public class BattleProcessConsole implements IMessageHandler
 	{
 		if (!myState.isRunning)
 		{
+			myState.isStopped = false;
 			RunnerMessage setup = new RunnerMessage();
 			setup.myCommand = RoboRunnerDefines.SETUP_REQUEST;
 			setup.myResult = String.format("I'm initialized and ask for some setup - type STATUS if you want to know more");
@@ -128,10 +128,18 @@ public class BattleProcessConsole implements IMessageHandler
 			sendMessage(setup, null);
 			return true;
 		}
+
 		RunnerMessage info = new RunnerMessage();
 		info.myCommand = RoboRunnerDefines.INFO;
 		info.myPriority = 1;
-		info.myResult = "Dude i'm still running - send me STOP first.";
+		if (!myState.isStopped)
+		{
+			info.myResult = "Dude, i'm still running - send me STOP first.";
+		}
+		else
+		{
+			info.myResult = "Dude, please wait a second i'm still try to stop the battles.";
+		}
 		sendMessage(info, null);
 		return false;
 	}
@@ -140,7 +148,9 @@ public class BattleProcessConsole implements IMessageHandler
 	{
 		// TODO: i guess it is possible if the messages are coming slow that this one need an init and stop check
 		// try to hit RUN RUN RUN in the console to evaluate this
-		if (!parseConfig(msg)) return;
+		if (myState.isStopped) return; //hmm 
+		final ProcessConfiguration config = parseConfig(msg);
+		if (config == null) return;
 
 		RunnerMessage setup = new RunnerMessage();
 		setup.myCommand = RoboRunnerDefines.INFO;
@@ -156,10 +166,10 @@ public class BattleProcessConsole implements IMessageHandler
 				if (myBattleListener != null) myEngine.removeBattleListener(myBattleListener);
 
 				// the BattleAdaptor sends result messages to the server 
-				myEngine.addBattleListener(myBattleListener = new DefaultBattleAdaptor(BattleProcessConsole.this));
-				BattlefieldSpecification bField = new BattlefieldSpecification(myConfig.getW(), myConfig.getH());
-				RobotSpecification[] bots = myEngine.getLocalRepository(myConfig.getBots());
-				BattleSpecification spec = new BattleSpecification(myConfig.getRounds(), bField, bots);
+				myEngine.addBattleListener(myBattleListener = new DefaultBattleAdaptor(BattleProcessConsole.this, config));
+				BattlefieldSpecification bField = new BattlefieldSpecification(config.getW(), config.getH());
+				RobotSpecification[] bots = myEngine.getLocalRepository(config.getBots());
+				BattleSpecification spec = new BattleSpecification(config.getRounds(), bField, bots);
 
 				myState.isRunning = true;
 				myEngine.runBattle(spec, true);
@@ -192,25 +202,25 @@ public class BattleProcessConsole implements IMessageHandler
 				sendMessage(result, null);
 
 				myState.isRunning = false;
-				myState.isStopped = false;
 			}
 		}).start();
 	}
 
-	private boolean parseConfig(ProcessMessage msg)
+	private ProcessConfiguration parseConfig(ProcessMessage msg)
 	{
-		// destination|command|prio|seasons|rounds|fieldw|fieldh|botname1,... 
+		// destination|command|prio|challengehash:season:rounds:fieldw:fieldh:botname1,... 
 		//MAIN|WORKING_COMMAND|1|10:35:1000:1000:botName1,botName2,....
-		if (myConfig == null) myConfig = new ProcessConfiguration();
 		String[] parseResult = msg.myResult.split(RoboRunnerDefines.RES_SPLITTER);
+		ProcessConfiguration result = new ProcessConfiguration();
 		try
 		{
 			int i = 0;
-			myConfig.setSeasons(parseResult[i++]);
-			myConfig.setRounds(parseResult[i++]);
-			myConfig.setW(parseResult[i++]);
-			myConfig.setH(parseResult[i++]);
-			myConfig.setBots(parseResult[i++]);
+			result.setChallengeID(parseResult[i++]);
+			result.setCurrentSeason(parseResult[i++]);
+			result.setRounds(parseResult[i++]);
+			result.setW(parseResult[i++]);
+			result.setH(parseResult[i++]);
+			result.setBots(parseResult[i++]);
 		}
 		catch (NumberFormatException e0)
 		{
@@ -219,14 +229,14 @@ public class BattleProcessConsole implements IMessageHandler
 			warn.myPriority = 1;
 			warn.myResult = "The setup you have send me is bogus!";
 			sendMessage(warn, null);
-			return false;
+			return null;
 		}
 		catch (Exception e1)
 		{
 			e1.printStackTrace(); // not sure if this can happen
-			return false;
+			return null;
 		}
-		return true;
+		return result;
 
 	}
 

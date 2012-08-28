@@ -2,11 +2,22 @@ package robowiki.console.process;
 
 public class ProcessConfiguration
 {
+	int		myChallengeID;
+	int		myCurrentSeason;
 	int		myH;
 	int		myW;
-	int		mySeasons;
 	int		myRounds;
-	String	myBots;	// separated by ','
+	String	myBots;			// separated by ','
+
+	public void setChallengeID(String value) throws NumberFormatException
+	{
+		myChallengeID = Integer.parseInt(value);
+	}
+
+	public void setCurrentSeason(String value) throws NumberFormatException
+	{
+		myCurrentSeason = Integer.parseInt(value);
+	}
 
 	public void setW(String bW) throws NumberFormatException
 	{
@@ -28,11 +39,6 @@ public class ProcessConfiguration
 		myBots = bots; // TODO: make a check to see if all bots available , the message has a \n on the end so get rid of it
 	}
 
-	public void setSeasons(String seasons) throws NumberFormatException
-	{
-		mySeasons = Math.max(1, Math.min(10000, Integer.parseInt(seasons))); // someone must be silly to make more than 10000 seasons i guess
-	}
-
 	public int getW()
 	{
 		return myW;
@@ -48,9 +54,14 @@ public class ProcessConfiguration
 		return myRounds;
 	}
 
-	public int getSeasons()
+	public int getChallengeID()
 	{
-		return mySeasons;
+		return myChallengeID;
+	}
+
+	public int getCurrentSeason()
+	{
+		return myCurrentSeason;
 	}
 
 	public String getBots()

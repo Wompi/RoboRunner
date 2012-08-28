@@ -18,11 +18,14 @@ public class ChallengeManager
 	private static ChallengeManager					instance;
 	private final static String						DEFAULT_GROUP	= "";
 
+	public final ResultsManager						myResultManager;
+
 	private final HashMap<String, RunnerChallenge>	myChallengeMap;
 
 	private ChallengeManager()
 	{
 		myChallengeMap = new HashMap<String, RunnerChallenge>();
+		myResultManager = new ResultsManager();
 	}
 
 	public RunnerChallenge getChallenge(String name)
