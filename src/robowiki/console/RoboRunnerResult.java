@@ -4,7 +4,8 @@ public class RoboRunnerResult
 {
 	public String	myID;
 
-	public int		myChallenge;		// hash of the challenge
+	public int		myChallengeID;		// ID (hash) of the challenge
+	public int		myBotListID;		// BotList ID (hash) for this result
 	public int		mySeason;
 	public int		myScore;
 	public int		mySurvival;

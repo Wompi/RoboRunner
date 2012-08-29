@@ -1,15 +1,10 @@
 package wompi;
 
-import java.io.Serializable;
+import robowiki.console.scorer.EAspect;
+import robowiki.console.scorer.ResultAspect;
 
-import robocode.control.events.BattleCompletedEvent;
-import robocode.control.events.RoundEndedEvent;
-import robowiki.console.scorer.IScorer;
-
-public class SurvivalScore implements IScorer, Serializable
+public class SurvivalScore extends ResultAspect
 {
-	private static final long	serialVersionUID	= -355855149226346165L;
-
 	@Override
 	public String getName()
 	{
@@ -17,16 +12,8 @@ public class SurvivalScore implements IScorer, Serializable
 	}
 
 	@Override
-	public void onRoundEnded(RoundEndedEvent event)
+	public String printResult()
 	{
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void onBattleCompleted(BattleCompletedEvent completedEvent)
-	{
-		// TODO Auto-generated method stub
-
+		return String.format(" SurvivalTest: %d\n", getValue(EAspect.SCORE));
 	}
 }

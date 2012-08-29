@@ -86,7 +86,8 @@ public class QueueWorker implements Runnable
 		try
 		{
 			int i = 0;
-			result.myChallenge = Integer.parseInt(parseResult[i++]);
+			result.myChallengeID = Integer.parseInt(parseResult[i++]);
+			result.myBotListID = Integer.parseInt(parseResult[i++]);
 			result.mySeason = Integer.parseInt(parseResult[i++]);
 			result.myScore = Integer.parseInt(parseResult[i++]);
 			result.mySurvival = Integer.parseInt(parseResult[i++]);

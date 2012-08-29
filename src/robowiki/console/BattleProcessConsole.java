@@ -7,13 +7,11 @@ import robocode.control.BattleSpecification;
 import robocode.control.BattlefieldSpecification;
 import robocode.control.RobocodeEngine;
 import robocode.control.RobotSpecification;
-import robocode.control.events.IBattleListener;
 import robowiki.console.process.ProcessConfiguration;
 
 public class BattleProcessConsole implements IMessageHandler
 {
 	private RobocodeEngine		myEngine;
-	private IBattleListener		myBattleListener;
 	private final EngineState	myState;
 
 	public static void main(String[] args)
@@ -163,26 +161,17 @@ public class BattleProcessConsole implements IMessageHandler
 			@Override
 			public void run()
 			{
-				if (myBattleListener != null) myEngine.removeBattleListener(myBattleListener);
+				DefaultBattleAdaptor battleAdaptor = new DefaultBattleAdaptor(BattleProcessConsole.this, config);
 
 				// the BattleAdaptor sends result messages to the server 
-				myEngine.addBattleListener(myBattleListener = new DefaultBattleAdaptor(BattleProcessConsole.this, config));
 				BattlefieldSpecification bField = new BattlefieldSpecification(config.getW(), config.getH());
 				RobotSpecification[] bots = myEngine.getLocalRepository(config.getBots());
 				BattleSpecification spec = new BattleSpecification(config.getRounds(), bField, bots);
 
 				myState.isRunning = true;
+				myEngine.addBattleListener(battleAdaptor);
 				myEngine.runBattle(spec, true);
-
-				// NOTE: because of a bug within the engine at cleanup i wait just a couple of seconds and then go on
-				//				try
-				//				{
-				//					Thread.sleep(1000);
-				//				}
-				//				catch (InterruptedException ex)
-				//				{
-				//					Thread.currentThread().interrupt();
-				//				}
+				myEngine.removeBattleListener(battleAdaptor);
 
 				RunnerMessage result = new RunnerMessage();
 				if (!myState.isStopped)
@@ -216,6 +205,7 @@ public class BattleProcessConsole implements IMessageHandler
 		{
 			int i = 0;
 			result.setChallengeID(parseResult[i++]);
+			result.setBotListID(parseResult[i++]);
 			result.setCurrentSeason(parseResult[i++]);
 			result.setRounds(parseResult[i++]);
 			result.setW(parseResult[i++]);

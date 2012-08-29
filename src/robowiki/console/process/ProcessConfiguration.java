@@ -3,6 +3,7 @@ package robowiki.console.process;
 public class ProcessConfiguration
 {
 	int		myChallengeID;
+	int		myBotListID;
 	int		myCurrentSeason;
 	int		myH;
 	int		myW;
@@ -12,6 +13,11 @@ public class ProcessConfiguration
 	public void setChallengeID(String value) throws NumberFormatException
 	{
 		myChallengeID = Integer.parseInt(value);
+	}
+
+	public void setBotListID(String value) throws NumberFormatException
+	{
+		myBotListID = Integer.parseInt(value);
 	}
 
 	public void setCurrentSeason(String value) throws NumberFormatException
@@ -57,6 +63,11 @@ public class ProcessConfiguration
 	public int getChallengeID()
 	{
 		return myChallengeID;
+	}
+
+	public int getBotListID()
+	{
+		return myBotListID;
 	}
 
 	public int getCurrentSeason()

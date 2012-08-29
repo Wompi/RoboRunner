@@ -12,7 +12,7 @@ import robowiki.console.RunnerFunctions;
 
 public class ScoreTableManager
 {
-	private final ArrayList<IScorer>	myScoreTables	= new ArrayList<IScorer>();
+	private final ArrayList<ResultAspect>	myScoreTables	= new ArrayList<ResultAspect>();
 
 	public ScoreTableManager()
 	{
@@ -31,15 +31,24 @@ public class ScoreTableManager
 		}
 	}
 
-	public ArrayList<IScorer> getScoreTables()
+	public ArrayList<ResultAspect> getScoreTables()
 	{
 		return myScoreTables;
 	}
 
-	public IScorer getScoreTableByName(String name)
+	public ResultAspect getAspectForName(String name)
 	{
-		IScorer scoreTable = null;
-		for (IScorer score : myScoreTables)
+		for (ResultAspect scorer : myScoreTables)
+		{
+			if (scorer.getName().equalsIgnoreCase(name)) { return scorer; };
+		}
+		throw new IllegalStateException("No Scorer for name!");
+	}
+
+	public ResultAspect getScoreTableByName(String name)
+	{
+		ResultAspect scoreTable = null;
+		for (ResultAspect score : myScoreTables)
 		{
 			if (score.getName().equals(name))
 			{
@@ -60,17 +69,19 @@ public class ScoreTableManager
 			try
 			{
 				Class<?> score = loader.loadClass(className);
-				Class<?>[] interfaces = score.getInterfaces();
+				//Class<?>[] interfaces = score.getSuperclass();
 
-				for (Class<?> scoreInterface : interfaces)
+				//				for (Class<?> classes : score)
+				//				{
+				//if (scoreInterface.getName().equals(ResultAspect.class.getName()))
+				if (score.getSuperclass() == ResultAspect.class)
 				{
-					if (scoreInterface.getName().equals(IScorer.class.getName()))
-					{
-						IScorer scoreTable = (IScorer) score.newInstance();
-						myScoreTables.add(scoreTable);
-					}
-					ConsoleWorker.formatConfig("File: %s - interface: %s\n", className, scoreInterface.getName());
+					ResultAspect scoreTable = (ResultAspect) score.newInstance();
+					myScoreTables.add(scoreTable);
+					ConsoleWorker.formatConfig("New Scorer: %s\n", scoreTable.getName());
 				}
+				ConsoleWorker.formatConfig("File: %s - interface: %s (%s)\n", className, score.getName(), ResultAspect.class.getName());
+				//				}
 			}
 			catch (Exception e)
 			{
