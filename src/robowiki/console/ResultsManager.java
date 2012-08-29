@@ -7,13 +7,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
+import robowiki.console.scorer.ScoreTableManager;
+
 public class ResultsManager
 {
 	private final HashMap<Integer, ArrayList<RoboRunnerResult>>	myResults;
 
+	private final ScoreTableManager								myScorer;
+
 	public ResultsManager()
 	{
 		myResults = new HashMap<Integer, ArrayList<RoboRunnerResult>>();
+		myScorer = new ScoreTableManager();
 	}
 
 	public void registerResult(RoboRunnerResult newResult)

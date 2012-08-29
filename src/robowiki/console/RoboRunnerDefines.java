@@ -3,7 +3,6 @@ package robowiki.console;
 public class RoboRunnerDefines
 {
 	// message related
-	public static final String	RESULT						= "RESULT";							// proc -> server
 	public static final String	SETUP_REQUEST				= "SETUP_REQUEST";						// proc -> server
 	public static final String	STOP_COMMAND				= "STOP_OMMAND";						// server -> proc
 	public static final String	WORKING_COMMAND				= "WORKING_COMMAND";					// server -> proc
@@ -27,6 +26,8 @@ public class RoboRunnerDefines
 	public static final String	DEBUG						= "DEBUG";
 	public static final String	AUTORUN						= "AUTO";								// TODO: maybe put debug and auto in a SET command
 	public static final String	STATUS						= "STATUS";
+	public static final String	RESULT_SHORT				= "RES";
+	public static final String	RESULT						= "RESULT";							// proc -> server
 
 	public static final String	MSG_DELIMITER				= "|";
 	public static final String	MSG_SPLITER					= "\\|";								// beware of the RegExp meaning
@@ -38,6 +39,8 @@ public class RoboRunnerDefines
 	public static final String	MAIN_PROPERTIES_NAME		= "roborunner.properties";
 	public static final String	ALL_PROCESSES				= "ALL_PROCESSES";
 	public static final String	ROBOCODE_DIR_NAME			= "robocodes";
+	public static final String	SCORE_DIR_NAME				= "scorer";
+
 	public static final String	JAR_DIR_NAME				= "libs";
 
 	// property entries
@@ -52,4 +55,5 @@ public class RoboRunnerDefines
 	public static final String	BOTLIST_SEASONS_KEY			= "roborunner.botlist.seasons";
 	public static final String	DEBUG_KEY					= "roborunner.debug";
 	public static final String	AUTORUN_KEY					= "roborunner.autorun";
+	public static final String	SCORER_PATH_KEY				= "roborunner.scorer.path";
 }

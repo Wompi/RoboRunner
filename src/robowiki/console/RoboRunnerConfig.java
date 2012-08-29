@@ -100,6 +100,12 @@ public class RoboRunnerConfig
 		hasChanged = true;
 	}
 
+	public String getScorerPath()
+	{
+		// hard coded to prevent unusual behavior but ready to make it changeable
+		return myProperties.getProperty(RoboRunnerDefines.SCORER_PATH_KEY, RoboRunnerDefines.SCORE_DIR_NAME);
+	}
+
 	public String getSourceRobocodePath()
 	{
 		return myProperties.getProperty(RoboRunnerDefines.ROBOCODE_SOURCE_PATH_KEY);

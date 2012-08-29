@@ -86,7 +86,7 @@ public class ConsoleWorker implements Runnable
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.AUTORUN)) processAutoRun();
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.HELP) || command.equalsIgnoreCase(RoboRunnerDefines.SHORT_HELP)) processHelp();
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.RUN)) processRun();
-				else if (command.equalsIgnoreCase(RoboRunnerDefines.RESULT)) processResult();
+				else if (command.equalsIgnoreCase(RoboRunnerDefines.RESULT) || command.equalsIgnoreCase(RoboRunnerDefines.RESULT_SHORT)) processResult();
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.QUIT) || command.equalsIgnoreCase(RoboRunnerDefines.EXIT))
 				{
 					Runtime.getRuntime().exit(0);
