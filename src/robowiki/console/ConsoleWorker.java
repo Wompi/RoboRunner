@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class ConsoleWorker implements Runnable
 {
@@ -86,7 +87,11 @@ public class ConsoleWorker implements Runnable
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.AUTORUN)) processAutoRun();
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.HELP) || command.equalsIgnoreCase(RoboRunnerDefines.SHORT_HELP)) processHelp();
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.RUN)) processRun();
-				else if (command.equalsIgnoreCase(RoboRunnerDefines.RESULT) || command.equalsIgnoreCase(RoboRunnerDefines.RESULT_SHORT)) processResult();
+				else if (command.toUpperCase().startsWith(RoboRunnerDefines.RESULT)
+						|| command.toUpperCase().startsWith(RoboRunnerDefines.RESULT_SHORT))
+				{
+					processResult(br, command);
+				}
 				else if (command.equalsIgnoreCase(RoboRunnerDefines.QUIT) || command.equalsIgnoreCase(RoboRunnerDefines.EXIT))
 				{
 					Runtime.getRuntime().exit(0);
@@ -115,9 +120,40 @@ public class ConsoleWorker implements Runnable
 		}
 	}
 
-	private void processResult()
+	private void processResult(BufferedReader br, String command)
 	{
-		ChallengeManager.getInstance().myResultManager.printAll();
+		Scanner parser = new Scanner(command);
+		String scoreName = null;
+		while (parser.hasNext())
+		{
+			String param = parser.next();
+			if (param.equals("?"))
+			{
+				Scanner names = new Scanner(ChallengeManager.getInstance().myResultManager.myScorer.getScorerNames());
+				names.useDelimiter(",");
+				int count = 0;
+				ArrayList<String> scorer = new ArrayList<String>();
+				while (names.hasNext())
+				{
+					String n = names.next();
+					formatConfig("\t[%d] %s\n", count++, n);
+					scorer.add(n);
+				}
+				while (true)
+				{
+					formatConfig("Select Scorer: ");
+					try
+					{
+						String choose = br.readLine();
+						scoreName = scorer.get(Integer.parseInt(choose));
+						break;
+					}
+					catch (Exception e)
+					{}
+				}
+			}
+		}
+		ChallengeManager.getInstance().myResultManager.printAll(scoreName);
 	}
 
 	private void processStatus()

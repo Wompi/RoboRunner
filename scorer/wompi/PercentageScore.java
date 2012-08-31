@@ -28,11 +28,23 @@ public class PercentageScore extends RunnerScore
 	@Override
 	public String getPrintString()
 	{
-		RAspect score = getAspect(EAspect.SCORE);
-		RAspect name = getAspect(EAspect.NAME);
-		RAspect count = getAspect(EAspect.BATTLE_COUNT);
-
-		return String.format("%35s avg:%5d sd:%7.2f se:%7.2f battles:%d\n", name.getStringValue(), (int) score.getAvgValue(),
-				score.getStandardDeviation(), score.getStandardError(), count.getIntValue());
+		RAspect challScore = getChallengerAspect(EAspect.SCORE);
+		RAspect botScore = getAspect(EAspect.SCORE);
+		RAspect botName = getAspect(EAspect.NAME);
+		RAspect botCount = getAspect(EAspect.BATTLE_COUNT);
+		double avgValue = botScore.getAvgValue();
+		double avgChallenger = challScore.getAvgValue();
+		double minValue = botScore.getMinimum();
+		double maxValue = botScore.getMaximum();
+		//@formatter:off
+		return String.format("%35s min: %6.2f  avg: %6.2f  max:%6.2f  sd: %6.2f  se: %6.2f  battles: %d\n", 
+				botName.getStringValue(), 
+				(minValue *100.0/(avgChallenger + minValue)), 
+				(avgValue * 100.0 / (avgChallenger + avgValue)), 
+				(maxValue *100.0/(avgChallenger + maxValue)),
+				(botScore.getStandardDeviation()*100.0/avgValue),
+				(botScore.getStandardError()*100.0/avgValue), 
+				botCount.getIntValue());
+		//@formatter:on
 	}
 }

@@ -35,6 +35,16 @@ public abstract class RAspect
 		return 0;
 	}
 
+	public double getMinimum()
+	{
+		return myValue;
+	}
+
+	public double getMaximum()
+	{
+		return myValue;
+	}
+
 	public static RAspect getAspect(final EAspect type)
 	{
 		switch (type)
@@ -67,7 +77,7 @@ public abstract class RAspect
 					public void setValue(RoboRunnerResult value)
 					{
 						myValue += value.mySurvival;
-						myValues.add((double) value.myScore);
+						myValues.add((double) value.mySurvival);
 					}
 				};
 
@@ -91,7 +101,6 @@ public abstract class RAspect
 			case BATTLE_COUNT:
 				return new RAspect()
 				{
-
 					@Override
 					public EAspect type()
 					{
@@ -102,6 +111,134 @@ public abstract class RAspect
 					public void setValue(RoboRunnerResult value)
 					{
 						myValue++;
+					}
+				};
+			case SURVIVAL_BONUS:
+				return new RSumAspect()
+				{
+					@Override
+					public EAspect type()
+					{
+						return type;
+					}
+
+					@Override
+					public void setValue(RoboRunnerResult value)
+					{
+						myValue += value.mySurvivalBonus;
+						myValues.add((double) value.mySurvivalBonus);
+					}
+				};
+			case BULLET_DMG:
+				return new RSumAspect()
+				{
+					@Override
+					public EAspect type()
+					{
+						return type;
+					}
+
+					@Override
+					public void setValue(RoboRunnerResult value)
+					{
+						myValue += value.myBulletDmg;
+						myValues.add((double) value.myBulletDmg);
+					}
+				};
+			case BULLET_BONUS:
+				return new RSumAspect()
+				{
+					@Override
+					public EAspect type()
+					{
+						return type;
+					}
+
+					@Override
+					public void setValue(RoboRunnerResult value)
+					{
+						myValue += value.myBulletBonus;
+						myValues.add((double) value.myBulletBonus);
+					}
+				};
+			case RAM_DMG:
+				return new RSumAspect()
+				{
+					@Override
+					public EAspect type()
+					{
+						return type;
+					}
+
+					@Override
+					public void setValue(RoboRunnerResult value)
+					{
+						myValue += value.myRamDmg;
+						myValues.add((double) value.myRamDmg);
+					}
+				};
+			case RAM_BONUS:
+				return new RSumAspect()
+				{
+					@Override
+					public EAspect type()
+					{
+						return type;
+					}
+
+					@Override
+					public void setValue(RoboRunnerResult value)
+					{
+						myValue += value.myRamBonus;
+						myValues.add((double) value.myRamBonus);
+					}
+				};
+			case FIRST:
+				return new RSumAspect()
+				{
+					@Override
+					public EAspect type()
+					{
+						return type;
+					}
+
+					@Override
+					public void setValue(RoboRunnerResult value)
+					{
+						myValue += value.myFirsts;
+						myValues.add((double) value.myFirsts);
+					}
+				};
+			case SECOND:
+				return new RSumAspect()
+				{
+					@Override
+					public EAspect type()
+					{
+						return type;
+					}
+
+					@Override
+					public void setValue(RoboRunnerResult value)
+					{
+						myValue += value.mySeconds;
+						myValues.add((double) value.mySeconds);
+					}
+				};
+			case THIRD:
+				return new RSumAspect()
+				{
+					@Override
+					public EAspect type()
+					{
+						return type;
+					}
+
+					@Override
+					public void setValue(RoboRunnerResult value)
+					{
+						myValue += value.myThirds;
+						myValues.add((double) value.myThirds);
 					}
 				};
 		}

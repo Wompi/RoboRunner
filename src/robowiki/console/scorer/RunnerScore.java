@@ -8,10 +8,12 @@ import robowiki.console.aspects.RAspect;
 public abstract class RunnerScore
 {
 	private HashMap<EAspect, RAspect>	myInterests;
+	private HashMap<EAspect, RAspect>	myChallenger;
 
 	public RunnerScore()
 	{
 		myInterests = new HashMap<EAspect, RAspect>();
+		myChallenger = new HashMap<EAspect, RAspect>();
 	}
 
 	public EAspect getSortType()
@@ -24,6 +26,18 @@ public abstract class RunnerScore
 	public final void setResults(HashMap<EAspect, RAspect> results)
 	{
 		myInterests = results;
+	}
+
+	public final void setChallengerResults(HashMap<EAspect, RAspect> challenger)
+	{
+		myChallenger = challenger;
+	}
+
+	protected final RAspect getChallengerAspect(EAspect type)
+	{
+		RAspect interest = myChallenger.get(type);
+		if (interest == null) throw new IllegalAccessError("You have called for an aspect that you have not registered!");
+		return interest;
 	}
 
 	protected final RAspect getAspect(EAspect type)

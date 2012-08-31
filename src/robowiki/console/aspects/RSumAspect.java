@@ -39,4 +39,26 @@ abstract class RSumAspect extends RAspect
 	{
 		return getStandardDeviation() / Math.sqrt(myValues.size());
 	}
+
+	@Override
+	public double getMinimum()
+	{
+		double min = Double.MAX_VALUE;
+		for (double value : myValues)
+		{
+			min = Math.min(min, value);
+		}
+		return min;
+	}
+
+	@Override
+	public double getMaximum()
+	{
+		double max = Double.MIN_VALUE;
+		for (double value : myValues)
+		{
+			max = Math.max(max, value);
+		}
+		return max;
+	}
 }

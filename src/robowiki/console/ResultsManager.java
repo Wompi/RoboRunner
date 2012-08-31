@@ -16,7 +16,7 @@ public class ResultsManager
 {
 	private final HashMap<Integer, HashMap<Integer, ArrayList<RoboRunnerResult>>>	myResults;
 
-	private final ScoreTableManager													myScorer;
+	public final ScoreTableManager													myScorer;
 
 	public ResultsManager()
 	{
@@ -39,7 +39,7 @@ public class ResultsManager
 		results.add(newResult);
 	}
 
-	public void printAll()
+	public void printAll(String newScore)
 	{
 		for (Entry<Integer, HashMap<Integer, ArrayList<RoboRunnerResult>>> entryChallenge : myResults.entrySet())
 		{
@@ -50,7 +50,16 @@ public class ResultsManager
 			try
 			{
 				challenge = ChallengeManager.getInstance().getChallengeByID(challengeID);
-				scorer = myScorer.getScorerForName(challenge.myScoreType);
+
+				try
+				{
+					scorer = myScorer.getScorerForName(newScore);
+				}
+				catch (IllegalStateException e0)
+				{
+					// TODO: a little to sloppy. If the score name not exists or is null take the default one 
+					scorer = myScorer.getScorerForName(challenge.myScoreType);
+				}
 			}
 			catch (IllegalStateException e0)
 			{
@@ -63,12 +72,11 @@ public class ResultsManager
 
 			for (Entry<Integer, ArrayList<RoboRunnerResult>> entryResults : botListResults.entrySet())
 			{
-				Integer botListID = entryResults.getKey();
+				//Integer botListID = entryResults.getKey();
 				ArrayList<RoboRunnerResult> results = entryResults.getValue();
 
 				HashMap<String, RoboRunnerSummaryResult> sumTable = new HashMap<String, RoboRunnerSummaryResult>();
-				int maxLen = 0;
-				int challengerScore = 0;
+				RoboRunnerSummaryResult challenger = null;
 				for (RoboRunnerResult result : results)
 				{
 					RoboRunnerSummaryResult sum = sumTable.get(result.myID);
@@ -76,22 +84,10 @@ public class ResultsManager
 					{
 						sumTable.put(result.myID, sum = new RoboRunnerSummaryResult());
 						sum.registerInterests(scorer.getInterests());
+						// TODO: revisit because of name changes to the challenger if it is a develop version this would fail 
+						if (challenge.myChallenger.equals(result.myID)) challenger = sum;
 					}
-
 					sum.setResults(result);
-					//sum.myBattleCount++;
-					//					sum.mySurvival += result.mySurvival;
-					//					sum.myBulletDmg += result.myBulletDmg;
-					//					sum.mySurvivalBonus += result.mySurvivalBonus;
-					//					sum.myBulletBonus += result.myBulletBonus;
-					//					sum.myRamDmg += result.myRamDmg;
-					//					sum.myRamBonus += result.myRamBonus;
-					//					sum.myFirsts += result.myFirsts;
-					//					sum.mySeconds += result.mySeconds;
-					//					sum.myThirds += result.myThirds;
-					//
-					// TODO: revisit because of name changes to the challenger if it is a develop version this would fail 
-					if (challenge.myChallenger.equals(result.myID)) challengerScore = sum.myScore;
 				}
 
 				List<RoboRunnerSummaryResult> sortedSum = new ArrayList<RoboRunnerSummaryResult>(sumTable.values());
@@ -109,19 +105,16 @@ public class ResultsManager
 							RAspect sortType1 = o1.getResultForType(sortType);
 							RAspect sortType2 = o2.getResultForType(sortType);
 
-							return (int) (sortType1.getAvgValue() - sortType2.getAvgValue());
+							return (int) (sortType2.getAvgValue() - sortType1.getAvgValue());
 						}
 					});
 				}
 
 				for (RoboRunnerSummaryResult sum : sortedSum)
 				{
+					scorer.setChallengerResults(challenger.getResults());
 					scorer.setResults(sum.getResults());
 					ConsoleWorker.format(scorer.getPrintString());
-
-					//					double avgScore = challengerScore * 100.0 / (challengerScore + sum.myScore);
-					//					ConsoleWorker.format("%30s %6d (%5.2f) %6d %6d %6d %4d %4d %4d %4d %4d \n", sum.myID, sum.myScore, avgScore, sum.myBulletDmg,
-					//							sum.mySurvivalBonus, sum.myBulletBonus, sum.myRamDmg, sum.myRamBonus, sum.myFirsts, sum.mySeconds, sum.myThirds);
 				}
 			}
 		}
