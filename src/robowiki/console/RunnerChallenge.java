@@ -44,7 +44,7 @@ public class RunnerChallenge
 		String bots = String.format("%s%s%s", myChallenger, RoboRunnerDefines.BOT_SPLITTER, nextBotList.toString());
 		String result = String.format("%d%s%d%s%d%s%d%s%d%s%d%s%s", this.hashCode(), sep, nextBotList.hashCode(), sep, nextBotList.useCount, sep,
 				myRounds, sep, myW, sep, myH, sep, bots);
-		ConsoleWorker.format("Season [%d-%d] for: %s\n", nextBotList.useCount, mySeasons, bots);
+		if (RoboRunnerConfig.getInstance().isDebug()) ConsoleWorker.format("Season [%d-%d] for: %s\n", nextBotList.useCount, mySeasons, bots);
 		return result;
 	}
 

@@ -40,7 +40,8 @@ public class QueueWorker implements Runnable
 					else hasMore = chall.hasMoreBattles();
 
 					// TODO: remove the yes/no it should be a proper output later
-					ConsoleWorker.format("Finish[%s]: %s (%s)\n", newEvent.getDestination(), newEvent.myResult, (hasMore ? "yes" : "no"));
+					ConsoleWorker.format("Finish[%s]: Type RESULT for the stats. More battles: (%s)\n", newEvent.getDestination(), (hasMore ? "yes"
+							: "no"));
 					if (hasMore)
 					{
 						RunnerMessage setup = new RunnerMessage();
@@ -100,8 +101,7 @@ public class QueueWorker implements Runnable
 			result.mySeconds = Integer.parseInt(parseResult[i++]);
 			result.myThirds = Integer.parseInt(parseResult[i++]);
 			result.myID = parseResult[i++];
-			ConsoleWorker.format("Result[%s]: season %d arrived for %s. Type RESULT for the stats.\n", newEvent.getDestination(), result.mySeason,
-					result.myID);
+			ConsoleWorker.format("Result[%s]: season %d arrived for %s\n", newEvent.getDestination(), result.mySeason, result.myID);
 		}
 		catch (NumberFormatException e0)
 		{
