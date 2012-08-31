@@ -8,16 +8,12 @@ import java.util.List;
 import java.util.Scanner;
 
 import robowiki.runner.BotList;
+import robowiki.runner.ChallengeConfig;
 import robowiki.runner.ChallengeConfig.BotListGroup;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 public class ChallengeManager
 {
 	private static ChallengeManager					instance;
-	private final static String						DEFAULT_GROUP	= "";
 
 	public final ResultsManager						myResultManager;
 
@@ -168,7 +164,7 @@ public class ChallengeManager
 	private void makeAllBotList(RunnerChallenge chall)
 	{
 		if (chall == null) return;
-		chall.myBots = Lists.newArrayList();
+		chall.myBots = new ArrayList<BotList>();
 		for (BotListGroup group : chall.myBotGroups)
 		{
 			for (BotList list : group.referenceBots)
@@ -201,9 +197,9 @@ public class ChallengeManager
 			Scanner parser = new Scanner(new File(challName));
 
 			int line = 0;
-			result.myBotGroups = Lists.newArrayList();
-			List<BotList> groupBots = Lists.newArrayList();
-			String groupName = DEFAULT_GROUP;
+			result.myBotGroups = new ArrayList<ChallengeConfig.BotListGroup>();
+			List<BotList> groupBots = new ArrayList<BotList>();
+			String groupName = RoboRunnerDefines.DEFAULT_GROUP;
 			Integer width = null;
 			Integer height = null;
 
@@ -250,28 +246,26 @@ public class ChallengeManager
 					else if (newLine.contains("}"))
 					{
 						result.myBotGroups.add(new BotListGroup(groupName, groupBots));
-						groupName = DEFAULT_GROUP;
-						groupBots = Lists.newArrayList();
+						groupName = RoboRunnerDefines.DEFAULT_GROUP;
+						groupBots = new ArrayList<BotList>();
 					}
 					else
 					{
-						List<String> botList = Lists.newArrayList(newLine.split(" *, *"));
-						Iterables.removeIf(botList, new Predicate<String>()
+						Scanner botSplitter = new Scanner(newLine);
+						botSplitter.useDelimiter(",");
+						List<String> botList = new ArrayList<String>();
+						while (botSplitter.hasNext())
 						{
-							@Override
-							public boolean apply(String botName)
+							String name = botSplitter.next().trim();
+							if (name.contains(".") && name.contains(" "))
 							{
-								if (botName.contains(".") && botName.contains(" "))
-								{
-									return false;
-								}
-								else
-								{
-									ConsoleWorker.format("WARNING: %s doesn't look like a bot name, ignoring.\n", botName);
-									return true;
-								}
+								botList.add(name);
 							}
-						});
+							else
+							{
+								ConsoleWorker.format("WARNING: %s doesn't look like a bot name, ignoring.\n", name);
+							}
+						}
 						maxBots = Math.max(maxBots, 1 + botList.size());
 						BotList buffy = new BotList(botList);
 						groupBots.add(buffy);

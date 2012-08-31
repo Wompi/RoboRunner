@@ -7,7 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-import robowiki.console.scorer.ResultAspect;
+import robowiki.console.aspects.EAspect;
+import robowiki.console.aspects.RAspect;
+import robowiki.console.scorer.RunnerScore;
 import robowiki.console.scorer.ScoreTableManager;
 
 public class ResultsManager
@@ -44,12 +46,11 @@ public class ResultsManager
 			Integer challengeID = entryChallenge.getKey();
 			HashMap<Integer, ArrayList<RoboRunnerResult>> botListResults = entryChallenge.getValue();
 			RunnerChallenge challenge;
-			ResultAspect scorer;
+			RunnerScore scorer;
 			try
 			{
 				challenge = ChallengeManager.getInstance().getChallengeByID(challengeID);
-				scorer = myScorer.getAspectForName(challenge.myScoreType);
-				scorer.printResult(); // TODO: revisit - this is a little bit odd but it registers the values to the scorer
+				scorer = myScorer.getScorerForName(challenge.myScoreType);
 			}
 			catch (IllegalStateException e0)
 			{
@@ -57,6 +58,7 @@ public class ResultsManager
 				e0.printStackTrace();
 				continue;
 			}
+
 			ConsoleWorker.format("Challenge results for: %s (ID:%d)\n", challenge.myName, challengeID);
 
 			for (Entry<Integer, ArrayList<RoboRunnerResult>> entryResults : botListResults.entrySet())
@@ -64,49 +66,58 @@ public class ResultsManager
 				Integer botListID = entryResults.getKey();
 				ArrayList<RoboRunnerResult> results = entryResults.getValue();
 
-				HashMap<String, RoboRunnerResult> sumTable = new HashMap<String, RoboRunnerResult>();
+				HashMap<String, RoboRunnerSummaryResult> sumTable = new HashMap<String, RoboRunnerSummaryResult>();
 				int maxLen = 0;
 				int challengerScore = 0;
 				for (RoboRunnerResult result : results)
 				{
-					RoboRunnerResult sum = sumTable.get(result.myID);
+					RoboRunnerSummaryResult sum = sumTable.get(result.myID);
 					if (sum == null)
 					{
-						sumTable.put(result.myID, sum = new RoboRunnerResult());
-						sum.myID = result.myID;
-						sum.myChallengeID = result.myChallengeID;
-						maxLen = Math.max(maxLen, sum.myID.length());
+						sumTable.put(result.myID, sum = new RoboRunnerSummaryResult());
+						sum.registerInterests(scorer.getInterests());
 					}
-					sum.myScore += result.myScore;
-					sum.mySurvival += result.mySurvival;
-					sum.myBulletDmg += result.myBulletDmg;
-					sum.mySurvivalBonus += result.mySurvivalBonus;
-					sum.myBulletBonus += result.myBulletBonus;
-					sum.myRamDmg += result.myRamDmg;
-					sum.myRamBonus += result.myRamBonus;
-					sum.myFirsts += result.myFirsts;
-					sum.mySeconds += result.mySeconds;
-					sum.myThirds += result.myThirds;
 
-					scorer.setValues(result);
-
+					sum.setResults(result);
+					//sum.myBattleCount++;
+					//					sum.mySurvival += result.mySurvival;
+					//					sum.myBulletDmg += result.myBulletDmg;
+					//					sum.mySurvivalBonus += result.mySurvivalBonus;
+					//					sum.myBulletBonus += result.myBulletBonus;
+					//					sum.myRamDmg += result.myRamDmg;
+					//					sum.myRamBonus += result.myRamBonus;
+					//					sum.myFirsts += result.myFirsts;
+					//					sum.mySeconds += result.mySeconds;
+					//					sum.myThirds += result.myThirds;
+					//
 					// TODO: revisit because of name changes to the challenger if it is a develop version this would fail 
 					if (challenge.myChallenger.equals(result.myID)) challengerScore = sum.myScore;
 				}
 
-				List<RoboRunnerResult> sortedSum = new ArrayList<RoboRunnerResult>(sumTable.values());
-				Collections.sort(sortedSum, new Comparator<RoboRunnerResult>()
-				{
-					@Override
-					public int compare(RoboRunnerResult o1, RoboRunnerResult o2)
-					{
-						return o2.myScore - o1.myScore;
-					}
-				});
+				List<RoboRunnerSummaryResult> sortedSum = new ArrayList<RoboRunnerSummaryResult>(sumTable.values());
 
-				for (RoboRunnerResult sum : sortedSum)
+				final EAspect sortType = scorer.getSortType();
+				if (sortType != null)
 				{
-					ConsoleWorker.format(scorer.printResult());
+					Collections.sort(sortedSum, new Comparator<RoboRunnerSummaryResult>()
+					{
+						@Override
+						public int compare(RoboRunnerSummaryResult o1, RoboRunnerSummaryResult o2)
+						{
+							// TODO: string aspects should be handled separate
+							// TODO: general revisit - the aspects should be comparable so i don't need this here 
+							RAspect sortType1 = o1.getResultForType(sortType);
+							RAspect sortType2 = o2.getResultForType(sortType);
+
+							return (int) (sortType1.getAvgValue() - sortType2.getAvgValue());
+						}
+					});
+				}
+
+				for (RoboRunnerSummaryResult sum : sortedSum)
+				{
+					scorer.setResults(sum.getResults());
+					ConsoleWorker.format(scorer.getPrintString());
 
 					//					double avgScore = challengerScore * 100.0 / (challengerScore + sum.myScore);
 					//					ConsoleWorker.format("%30s %6d (%5.2f) %6d %6d %6d %4d %4d %4d %4d %4d \n", sum.myID, sum.myScore, avgScore, sum.myBulletDmg,

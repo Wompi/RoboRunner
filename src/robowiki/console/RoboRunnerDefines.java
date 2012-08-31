@@ -4,7 +4,7 @@ public class RoboRunnerDefines
 {
 	// message related
 	public static final String	SETUP_REQUEST				= "SETUP_REQUEST";						// proc -> server
-	public static final String	STOP_COMMAND				= "STOP_OMMAND";						// server -> proc
+	public static final String	STOP_COMMAND				= "STOP_COMMAND";						// server -> proc
 	public static final String	WORKING_COMMAND				= "WORKING_COMMAND";					// server -> proc
 	public static final String	RUN_COMMAND					= "RUN_COMMAND";						// server -> proc
 	public static final String	BATTLE_ERROR				= "BATTLE_ERROR";						// proc --> server
@@ -38,6 +38,8 @@ public class RoboRunnerDefines
 	// general related
 	public static final String	MAIN_PROPERTIES_NAME		= "roborunner.properties";
 	public static final String	ALL_PROCESSES				= "ALL_PROCESSES";
+	public final static String	DEFAULT_GROUP				= "DEFAULT_GROUP";
+
 	public static final String	ROBOCODE_DIR_NAME			= "robocodes";
 	public static final String	SCORE_DIR_NAME				= "scorer";
 

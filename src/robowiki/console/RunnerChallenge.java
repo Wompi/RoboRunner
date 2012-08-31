@@ -92,4 +92,17 @@ public class RunnerChallenge
 		}
 		return false;
 	}
+
+	public int longestBotName()
+	{
+		int result = 0;
+		for (BotList list : myBots)
+		{
+			for (String name : list.getBotNames())
+			{
+				result = Math.max(result, name.length());
+			}
+		}
+		return result;
+	}
 }

@@ -12,7 +12,7 @@ import robowiki.console.RunnerFunctions;
 
 public class ScoreTableManager
 {
-	private final ArrayList<ResultAspect>	myScoreTables	= new ArrayList<ResultAspect>();
+	private final ArrayList<RunnerScore>	myScoreTables	= new ArrayList<RunnerScore>();
 
 	public ScoreTableManager()
 	{
@@ -31,24 +31,24 @@ public class ScoreTableManager
 		}
 	}
 
-	public ArrayList<ResultAspect> getScoreTables()
+	public ArrayList<RunnerScore> getScoreTables()
 	{
 		return myScoreTables;
 	}
 
-	public ResultAspect getAspectForName(String name)
+	public RunnerScore getScorerForName(String name)
 	{
-		for (ResultAspect scorer : myScoreTables)
+		for (RunnerScore scorer : myScoreTables)
 		{
 			if (scorer.getName().equalsIgnoreCase(name)) { return scorer; };
 		}
 		throw new IllegalStateException("No Scorer for name!");
 	}
 
-	public ResultAspect getScoreTableByName(String name)
+	public RunnerScore getScoreTableByName(String name)
 	{
-		ResultAspect scoreTable = null;
-		for (ResultAspect score : myScoreTables)
+		RunnerScore scoreTable = null;
+		for (RunnerScore score : myScoreTables)
 		{
 			if (score.getName().equals(name))
 			{
@@ -74,13 +74,13 @@ public class ScoreTableManager
 				//				for (Class<?> classes : score)
 				//				{
 				//if (scoreInterface.getName().equals(ResultAspect.class.getName()))
-				if (score.getSuperclass() == ResultAspect.class)
+				if (score.getSuperclass() == RunnerScore.class)
 				{
-					ResultAspect scoreTable = (ResultAspect) score.newInstance();
+					RunnerScore scoreTable = (RunnerScore) score.newInstance();
 					myScoreTables.add(scoreTable);
 					ConsoleWorker.formatConfig("New Scorer: %s\n", scoreTable.getName());
 				}
-				ConsoleWorker.formatConfig("File: %s - interface: %s (%s)\n", className, score.getName(), ResultAspect.class.getName());
+				ConsoleWorker.formatConfig("File: %s - interface: %s (%s)\n", className, score.getName(), RunnerScore.class.getName());
 				//				}
 			}
 			catch (Exception e)
