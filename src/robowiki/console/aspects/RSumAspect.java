@@ -2,7 +2,7 @@ package robowiki.console.aspects;
 
 import java.util.ArrayList;
 
-abstract class RSumAspect extends RAspect
+public abstract class RSumAspect extends RAspect
 {
 	protected ArrayList<Double>	myValues;
 

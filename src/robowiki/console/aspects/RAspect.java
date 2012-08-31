@@ -4,7 +4,7 @@ import robowiki.console.RoboRunnerResult;
 
 public abstract class RAspect
 {
-	double	myValue;
+	protected double	myValue;
 
 	public abstract EAspect type();
 

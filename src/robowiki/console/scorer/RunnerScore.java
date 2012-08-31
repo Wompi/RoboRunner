@@ -47,6 +47,11 @@ public abstract class RunnerScore
 		return interest;
 	}
 
+	public String getFooter()
+	{
+		return "";
+	}
+
 	public abstract String getPrintString();
 
 	public abstract String getName();

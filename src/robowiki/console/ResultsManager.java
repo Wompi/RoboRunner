@@ -112,11 +112,13 @@ public class ResultsManager
 
 				for (RoboRunnerSummaryResult sum : sortedSum)
 				{
+					if (sum == challenger) continue;
 					scorer.setChallengerResults(challenger.getResults());
 					scorer.setResults(sum.getResults());
 					ConsoleWorker.format(scorer.getPrintString());
 				}
 			}
+			ConsoleWorker.format(scorer.getFooter());
 		}
 
 	}
